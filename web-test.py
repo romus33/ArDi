@@ -332,7 +332,26 @@ def parse_contents(contents,filename):
     elif '.txt' in filename:
                 decoded = base64.b64decode(contents).decode(errors='ignore')
                 res_= decoded.splitlines()
-                c_ = fnd.readfile(res_)
+                try:
+                    c_ = fnd.readfile(res_)
+                except Exception as err_:
+                    error_string=str(err_)
+                    i_=3
+                    while "could not convert string" in error_string:
+                       try:
+                            error_string=''
+                            c_ = fnd.readfile(res_, skiprows=i_)
+                            
+
+                       except Exception as err_:
+                            error_string=str(err_)
+                            i_=i_+2
+
+                    try:
+                        c_ = fnd.readfile(res_, skiprows=i_+2)
+                    except:
+                        raise ValueError(f'Format of file is not supported.')
+                    
             
     elif '.csv' in filename:
                 print(filename)
