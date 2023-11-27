@@ -5,5 +5,5 @@ The web application is initiated using web-test.py.
 
 The application is built on the Dash framework. The curve fitting utilizes the least-square method implemented in the lmfit package. The baseline is calculated using the ALS algorithm, and a C++ library is employed for this purpose.
 
-The necessary packages for the application include: numpy, lmfit, plotly, dash, pandas, platform, pathlib, urllib, and dash_bootstrap_components.
+The necessary packages for the application include: numpy, lmfit, plotly, dash, pandas, platform, pathlib, urllib, and dash_bootstrap_components and >glibc-2.29.
 
