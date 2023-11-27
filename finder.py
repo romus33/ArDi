@@ -13,7 +13,7 @@ __license__ = "GNU GPL 3.0"
 __version__ = "0.2.0"
 
 import numpy as np
-import scipy.special as sp
+#import scipy.special as sp
 #import os,sys,math
 import fittingmap as mm
 
@@ -28,6 +28,7 @@ def smooth(y, box_pts):
     return y_smooth
 
 def readfile(filename, skiprows = 1):
+        
         a = np.loadtxt(filename, skiprows=skiprows)
         xx = np.array([])
         yy = np.array([])
@@ -65,7 +66,7 @@ def peakdetect(xx, yy, lookahead = 1, delta = 0.011):
         spectra['ampl'] = ampl
         return spectra
  
-def fitcurve(xx,yy,peaks_str,parameters = None, tolerance = 1e-15):
+def fitcurve(xx,yy,peaks_str,parameters = None, parameter_als=None, tolerance = 1e-15):
         limits = {}
         ma = {}
         i = 0  
@@ -78,10 +79,16 @@ def fitcurve(xx,yy,peaks_str,parameters = None, tolerance = 1e-15):
         x = [int(i) for i in peaks_str.split(',') if i.strip().isdigit()]
         xx = np.array(xx)
         yy = np.array(yy)
-        params['baseline_auto'] = [1e7,0.005,5]
+        if parameter_als is None:
+        
+            params['baseline_auto'] = [1e7,0.005,5]
+            limits['baseline_auto'] = [[1e5, 5e9], [0.0001, 0.1]]
+        else:
+            params['baseline_auto'] = [float(parameter_als[0]["p_lam"]), float(parameter_als[0]["p_p"]), 5]
+            limits['baseline_auto'] = [[float(parameter_als[0]["l_lam_min"]),float(parameter_als[0]["l_lam_max"])], [float(parameter_als[0]["l_p_min"]),float(parameter_als[0]["l_p_max"])]]
         params['kws'] = {'ftol': tolerance, 'xtol': tolerance, 'gtol': tolerance}
         params['max_nfev'] = 10000000
-        limits['baseline_auto'] = [[1e4, 5e9], [0.0001, 0.1]]
+
         if parameters is None:
             params['amplitude'] = np.full(len(x),1)
             params['center'] = np.array(x)    

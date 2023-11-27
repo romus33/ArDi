@@ -13,6 +13,7 @@ __license__ = "GNU GPL 3.0"
 __version__ = "0.2.0"
 
 from dash import Dash, dcc, html, dash_table, Input, Output, State, callback
+from dash.dash_table.Format import Format, Scheme, Trim
 import dash_bootstrap_components as dbc
 import plotly.express as px
 import plotly.graph_objects as go
@@ -218,7 +219,7 @@ app.layout = html.Div([
                     #Block with fitting parameters table
              html.Div([
                         dash_table.DataTable(
-                        id='table-dropdown',
+                        id = 'table-dropdown',
                         columns = [
                                     {'id': 'p_center', 'name': 'Center (C)'},
                                     {'id': 'p_amplitude', 'name': 'Amplitude (A)'},
@@ -231,8 +232,8 @@ app.layout = html.Div([
                                     {'id': 'l_width_min', 'name': 'S_min scaler'},
                                     {'id': 'l_width_max', 'name': 'S_max scaler'},
                                    ],
-                        editable=True,
-                        dropdown={
+                        editable = True,
+                        dropdown = {
                                     'p_method': {
                                     'options': [{'label': i, 'value': i} for i in ['PseudoVoigt', 'Gaussian', 'Voigt', 
                                                                                     'Lorentzian','Pearson4','Pearson7',
@@ -243,6 +244,27 @@ app.layout = html.Div([
                                                 }
                                   }
                                             ),
+                        html.P("ALS baseline parameters", style = {'text-align':'center','margin-top':'10px'}),                    
+                        dash_table.DataTable(
+                        id = 'table-dropdown-als',
+                        data = [{'p_p': 0.005, 'l_p_min': 0.0001, 'l_p_max': 0.1, 'p_lam': 1e7, 'l_lam_min': 1e5, 'l_lam_max': 1e9}],
+                        columns = [
+                                    {'id': 'p_p', 'name': 'ALS p-parameter (p)'},
+                                    {'id': 'l_p_min', 'name': 'ALS p_min'},
+                                    {'id': 'l_p_max', 'name': 'ALS p_max'},
+                                    dict(
+                                        id = 'p_lam', 
+                                        name='ALS Lambda parameter (lam)', 
+                                        type='numeric', 
+                                        format=Format(precision=2, scheme=Scheme.decimal_or_exponent)
+                                        ),
+                                    dict(id = 'l_lam_min', name='ALS lam_min', type='numeric', format=Format(precision=2, scheme=Scheme.decimal_or_exponent)),
+                                    dict(id = 'l_lam_max', name='ALS lam_max', type='numeric', format=Format(precision=2, scheme=Scheme.decimal_or_exponent)),
+
+                                    
+                                   ],
+                        editable=True,
+                                            ),                                            
                  html.Div(id = 'table-dropdown-container')]),
                  html.Div(
                             [
@@ -373,7 +395,7 @@ def parse_contents(contents,filename):
 
 # Plot the uploaded spectrum callback       
 @app.callback(
-
+                
                 Output('table-dropdown', 'data'),
                 Output('graph', 'figure'),
                 Output('lookahead', 'value'),
@@ -424,6 +446,7 @@ def update_line_chart(contents):
                         'l_width_min': 0.2, 'l_width_max':20
                         }
                       )
+    
     return params, fig, data_['look'], data_['delta'], ','.join([str(round(i)) for i in data_['peaks']])
 
 # Find peaks again with new lookahead and lambda parameters    
@@ -542,12 +565,20 @@ def update_line_chart(data_, filename):
                 State('upload-data', 'filename'),
                 State('tolerance','value'),
                 State('table-dropdown','data'),
+                State('table-dropdown-als', 'data'),
                 prevent_initial_call = True,
             )
     
-def update_fitline_chart(n_clicks, peaks, data_, filename, tolerance,table_par):
+def update_fitline_chart(n_clicks, peaks, data_, filename, tolerance,table_par,table_als):
 
-    data_ = fnd.fitcurve(data_['spectrum'][0],data_['spectrum'][1],peaks, parameters=table_par, tolerance=tolerance)
+    data_ = fnd.fitcurve(
+                            data_['spectrum'][0],
+                            data_['spectrum'][1],
+                            peaks, 
+                            parameters = table_par, 
+                            parameter_als = table_als, 
+                            tolerance = tolerance
+                        )
     fig = go.Figure()
     df_peaks = {}
     df_peaks['x'] = data_['output'][0]
