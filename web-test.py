@@ -617,4 +617,4 @@ def update_fitline_chart(n_clicks, peaks, data_, filename, tolerance,table_par):
     return fig, csv_string_s, csv_string_f, csv_string_p, csv_string_pa 
 
     
-app.run_server(debug = True)
+app.run_server(host= '0.0.0.0',debug = True)
