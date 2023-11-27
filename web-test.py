@@ -324,11 +324,11 @@ def parse_contents(contents,filename):
         
     c_={}
     if '.esp' in filename:
-            content_type,content_string = contents.split(',')
-            decoded = base64.b64decode(content_string)
-            dec_ = io.StringIO(decoded.decode('utf-8'))
-            res_ = dec_.getvalue().splitlines()
-            c_ = fnd.readfile(res_,skiprows=2)
+                content_type,content_string = contents.split(',')
+                decoded = base64.b64decode(content_string)
+                dec_ = io.StringIO(decoded.decode('utf-8'))
+                res_ = dec_.getvalue().splitlines()
+                c_ = fnd.readfile(res_,skiprows=2)
     elif '.txt' in filename:
                 decoded = base64.b64decode(contents).decode(errors='ignore')
                 res_= decoded.splitlines()
@@ -360,6 +360,13 @@ def parse_contents(contents,filename):
                 res_ = pd.read_csv(io.StringIO(decoded.decode('utf-8'))).values.tolist()
                 res_ = [str(i[0])+' '+str(i[1]) for i in res_]
                 c_ = fnd.readfile(res_)
+    elif '.ascii' in filename:
+                # For infrared spectra from Simex
+                content_type,content_string = contents.split(',')
+                decoded = base64.b64decode(content_string)
+                dec_ = io.StringIO(decoded.decode('cp1251'))
+                res_ = dec_.getvalue().splitlines()
+                c_ = fnd.readfile(res_,skiprows=9)                
     else:
                 raise ValueError(f'Format of file is not supported.')
     return (c_, c_)
