@@ -16,7 +16,7 @@ import numpy as np
 # import scipy.sparse as sparse
 from lmfit.model import Model
 # from scipy.sparse.linalg import spsolve
-from termcolor import colored
+#from termcolor import colored
 import progressbar as pb
 import os, sys
 import platform
