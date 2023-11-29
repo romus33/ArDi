@@ -281,6 +281,17 @@ app.layout = html.Div([
                             'vertical-align': 'middle'
                             }
                     ),
+              html.A(
+                    'Download Fitted Data without baseline',
+                    id = 'download-link-fit-nobline',
+                    download = "fit-no-bline.csv",
+                    href = "",
+                    target = "_blank",
+                    style = {'display': 'inline-block', 'font-family': 'Times New Roman, Times, serif', 
+                            'font-weight': 'bold', 'margin-left': '10px',
+                            'vertical-align': 'middle'
+                            }
+                    ),
              html.A(
                     'Download Peaks',
                     id = 'download-link-peaks',
@@ -727,6 +738,7 @@ def plot_phases(n_clicks, db_string, data_,nphases, cos_):
                 Output('download-link-fit', 'href'),
                 Output('download-link-peaks', 'href'),
                 Output('download-link-params', 'href'),
+                Output('download-link-fit-nobline', 'href'),
                 Input('submit-fit', 'n_clicks'),
                 State('peaks', 'value'),
                 [State('b', 'data')],
@@ -805,6 +817,10 @@ def update_fitline_chart(n_clicks, peaks, data_, filename, tolerance,table_par,t
     df = pd.DataFrame(data=df_conv)
     csv_string_f = df.to_csv(index = False, encoding = 'utf-8')
     csv_string_f = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string_f)
+    df_substr = {'x': data_['output'][0], 'y': data_['output'][1]-bg_}
+    df = pd.DataFrame(data = df_substr)
+    csv_string_f_nb = df.to_csv(index = False, encoding = 'utf-8')
+    csv_string_f_nb = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string_f_nb)
     df = pd.DataFrame(data = df_peaks)
     csv_string_p = df.to_csv(index = False, encoding = 'utf-8')
     csv_string_p = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string_p)
@@ -814,7 +830,7 @@ def update_fitline_chart(n_clicks, peaks, data_, filename, tolerance,table_par,t
     fig.update_layout(title = "Deconvoluted spectrum of "+filename+". R-Square: {0:.4f}".format(data_["params"]["R-Square"]),
     xaxis_title = "Wavenumber, cm-1",
     yaxis_title = "Intensity")   
-    return fig, csv_string_s, csv_string_f, csv_string_p, csv_string_pa 
+    return fig, csv_string_s, csv_string_f, csv_string_p, csv_string_pa, csv_string_f_nb 
 
 
     

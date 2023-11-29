@@ -432,8 +432,8 @@ class ReadWrite5(object):
 
     # find phase close to input [x,y] spectrumin h5
 
-    @staticmethod
-    def findphase_h5(x, y, db, r_ref=0.95):
+
+    def findphase_h5(self, x, y, db, r_ref=0.95):
         nrecords = len(db)
         tmp_arr = np.zeros(nrecords)
 
@@ -446,6 +446,7 @@ class ReadWrite5(object):
             dbX = np.linspace(db[str(cnt)]["xmin"], db[str(cnt)]["xmax"], db[str(cnt)]["npoints"])
             dbY = np.array(db[str(cnt)]["ydata"])
             dbY = np.interp(x, dbX, dbY)
+            dbY = dbY-self.__baseline_als_dll__(dbY)
             r = np.dot(dbY, y) / (np.linalg.norm(dbY) * np.linalg.norm(y))
             tmp_arr[cnt] = r
         return filled(tmp_arr, r_ref)
