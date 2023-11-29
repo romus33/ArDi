@@ -160,3 +160,27 @@ def fitcurve(xx,yy,peaks_str,parameters = None, parameter_als=None, tolerance = 
         length_2 = len(x1)
         #Рисуем и сохраняем кривые
         return {'input': [xx,yy], 'output': [x1, y1], 'components': fit.components, 'length_in': length_, 'length_out':  length_2, 'params': fit_param}
+
+def find_phase(spectrum, dbname = None, print_number = 10, sim = 0.8):
+    if dbname is not None:
+            dbRead = mm.ReadWrite5()
+            db = dbRead.readh5(fname=dbname)
+            spectra = dbRead.readh5_all(fname = dbname)
+            fnd = dbRead.findphase_h5(xx, yy, db, sim)
+            search_result = {}
+            search_result['n_phases'] = fnd["num"]
+            if len(search_result['n_phases']) > print_number:
+                    max_num = print_number
+            else:
+                    max_num = len(search_result['n_phases'])
+            founded_names=[]
+            founded_phases=[]            
+            for val in range(max_num):
+                    str_ = spectra[str(fnd["num"][val])][2]
+                    b = str_.split('_')
+                    founded_names.append({'r-square': format(fnd["r"][val], '.4f'), 'name': b[0], 'id': b[1]})
+                    str_=b[0]+'_'+b[1]
+                    founded_phases.append({'x': spectra[str(fnd["num"][val])][0], 'y': spectra[str(fnd["num"][val])][1], 'label': str_})
+            return founded_names, founded_phases
+    else:
+            raise ValueError(f'Empty db') 

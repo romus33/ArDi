@@ -24,7 +24,8 @@ import pandas as pd
 import urllib
 import base64
 import io, os, sys, copy
-
+from flask_caching import Cache
+TIMEOUT = 60
 
 app = Dash(__name__, external_stylesheets=
                                         [dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],
@@ -36,6 +37,13 @@ app = Dash(__name__, external_stylesheets=
            )
 app.title = "ArDI"
 app._favicon = ("assets/favicon.ico")
+cache = Cache(app.server, 
+                config={
+                         'CACHE_TYPE': 'filesystem',
+                         'CACHE_DIR': 'cache-directory'
+                        }
+             )
+             
 app.layout = html.Div([
                       html.H2('ArDI (Advanced spectRa Deconvolution Instrument)',style={'text-align': 'center'}),
              dcc.Store(id = "b"), # The container for store of the dictionary number of peaks and loaded spectrum
@@ -64,7 +72,63 @@ app.layout = html.Div([
                         multiple = False
                     ),
              html.Div([    
-                      html.H6('Look ahead:',style={'display':'inline-block','margin-left': 10, 'margin-right':5}),  
+                      dcc.Tabs([
+        dcc.Tab(label='Moving average smoothing', children=[
+                      html.Div([html.H6('Smooth window:',style={'display':'inline-block','margin-right':5, 'margin-left':10}),
+                      ### Smooth procedures ###
+                      # Moving average
+                      dbc.Input(
+                                id = "smooth",
+                                type = "number",
+                                value = 4,
+                                placeholder="",
+                                style={'display':'inline-block', 'width': 85,'vertical-align': 'middle'} 
+                                ),                  
+                      dbc.Button("Smooth", 
+                                color = "primary", 
+                                className = "me-2", 
+                                id = 'submit-smooth', 
+                                n_clicks = 0, 
+                                style = {"display": "inline-block",'vertical-align': 'middle', 'margin-left': "10px"}
+                                ),                       dbc.Button("Reset", 
+                                 color = "primary", 
+                                 className = "me-2", 
+                                 id = 'submit-reset', n_clicks=0, style={"display": "inline-block",'vertical-align': 'middle'}
+                                ),], className='col-sm-8', style={'margin-top': 10}) ]),
+        dcc.Tab(label='ALS smoothing', children=[             
+                      html.Div([html.H6('Smooth:',style={'display':'inline-block','margin-right':5, 'margin-left':10}),  
+                      # Als smoothing
+                      dbc.Input(
+                                id = "p-als",
+                                type = "number",
+                                value = 0.1,
+                                placeholder = "",
+                                step = 0.001,
+                                style={'display':'inline-block', 'width': 85,'vertical-align': 'middle'} 
+                                ), 
+                      html.H6('p:',style={'display':'inline-block','margin-right':5, 'margin-left':10}),  
+                      dbc.Input(
+                                id = "lam-als",
+                                type = "number",
+                                value = 0.9,
+                                placeholder = "",
+                                style = {'display':'inline-block', 'width': 85,'vertical-align': 'middle'} 
+                                ),
+                      dbc.Button("Smooth ALS", 
+                                 color = "primary", 
+                                 className = "me-2", 
+                                 id = 'submit-smooth-als', 
+                                 n_clicks = 0, 
+                                 style = {"display": "inline-block",'vertical-align': 'middle', 'margin-left': '10px'}
+                                ),                       dbc.Button("Reset", 
+                                 color = "primary", 
+                                 className = "me-2", 
+                                 id = 'submit-reset-2', n_clicks=0, style={"display": "inline-block",'vertical-align': 'middle'}
+                                ),], className='col-sm-8', style={'margin-top': 10}) ])])]),
+                      #Reset smoothing
+
+                     html.Div([
+                      html.Div([html.H6('Look ahead:',style={'display':'inline-block','margin-left': 10, 'margin-right':5, 'margin-top': '10px'}),  
                       # Input box for peakfinder parameters
                       dbc.Input(
                                 id = "lookahead",
@@ -84,62 +148,14 @@ app.layout = html.Div([
                                 style = {'display':'inline-block', 'width': 85,'vertical-align': 'middle'} 
                                 ),
                       # Find peaks button
-                      dbc.Button("Find", 
+                      dbc.Button("Find peaks", 
                                  color="primary", 
                                  className="me-1", 
                                  id = 'submit-val', 
                                  n_clicks = 0, 
-                                 style = {"display": "inline-block",'vertical-align': 'middle', 'margin-left': '10px'}),
-                      html.H6('Smooth window:',style={'display':'inline-block','margin-right':5, 'margin-left':10}),
-                      ### Smooth procedures ###
-                      # Moving average
-                      dbc.Input(
-                                id = "smooth",
-                                type = "number",
-                                value = 4,
-                                placeholder="",
-                                style={'display':'inline-block', 'width': 85,'vertical-align': 'middle'} 
-                                ),                  
-                      dbc.Button("Smooth", 
-                                color = "primary", 
-                                className = "me-2", 
-                                id = 'submit-smooth', 
-                                n_clicks = 0, 
-                                style = {"display": "inline-block",'vertical-align': 'middle', 'margin-left': "10px"}
-                                ),
-                      html.H6('Als smooth p:',style={'display':'inline-block','margin-right':5, 'margin-left':10}),  
-                      # Als smoothing
-                      dbc.Input(
-                                id = "p-als",
-                                type = "number",
-                                value = 0.1,
-                                placeholder = "",
-                                step = 0.001,
-                                style={'display':'inline-block', 'width': 85,'vertical-align': 'middle'} 
-                                ), 
-                      html.H6('Als smooth lambda:',style={'display':'inline-block','margin-right':5, 'margin-left':10}),  
-                      dbc.Input(
-                                id = "lam-als",
-                                type = "number",
-                                value = 0.9,
-                                placeholder = "",
-                                style = {'display':'inline-block', 'width': 85,'vertical-align': 'middle'} 
-                                ),
-                      dbc.Button("Smooth Als", 
-                                 color = "primary", 
-                                 className = "me-2", 
-                                 id = 'submit-smooth-als', 
-                                 n_clicks = 0, 
-                                 style = {"display": "inline-block",'vertical-align': 'middle', 'margin-left': '10px'}
-                                ),
-                      #Reset smoothing
-                      dbc.Button("Reset", 
-                                 color = "primary", 
-                                 className = "me-2", 
-                                 id = 'submit-reset', n_clicks=0, style={"display": "inline-block",'vertical-align': 'middle'}
-                                )
-                      ]),
-             html.Br(),            
+                                 style = {"display": "inline-block",'vertical-align': 'middle', 'margin-left': '10px'})], style={'margin-top': 10}, className="col-sm-6"),
+                                 #],className="row", style={'margin-top': 10}),
+             html.Div([           
              html.H6('Tolerance:',style={'display':'inline-block','margin': 10,'vertical-align': 'middle'}),
              # Fittig peaks             
              dbc.Input(
@@ -147,7 +163,7 @@ app.layout = html.Div([
                         type = "number",
                         value = 1e-15,
                         placeholder = "",
-                        style={'display':'inline-block', 'width': 80, 'margin': 10,'vertical-align': 'middle'} 
+                        style={'display':'inline-block', 'width': 85, 'margin-left': 5,'vertical-align': 'middle'} 
                        ),        
              dbc.Button("Fit", 
                             color = "success", 
@@ -156,21 +172,30 @@ app.layout = html.Div([
                             n_clicks = 0, 
                             style = {"display": "inline-block", 'margin-left': 5, 'margin-right':5, 'vertical-align': 'middle'}
                        ),
-             # Output/input peaks          
+             dbc.Button("Cut", 
+                            color = "danger", 
+                            className = "me-2", 
+                            id = 'submit-cut', 
+                            n_clicks = 0, 
+                            style = {"display": "inline-block", 'margin-left': 5, 'margin-right':5, 'vertical-align': 'middle'}
+                       )], className="col-sm-6 .col-md-4")], className="row gy-2", style={'margin-top': 10, 'margin-bottom': 10}),                       
+             # Output/input peaks 
+             html.Div([
              dbc.Input(
                         id = "peaks",
                         type = "text",
                         placeholder = "Found peaks",
                         style = {'width': '99%', 'textAlign': 'center', 'margin':'auto'}, 
                         className = "form-control form-control-sm"
-                       ),
-             # Plot graphs          
+                       )], className="row"),
+             # Plot graphs  
+             html.Div([
              html.Div([dcc.Loading(dcc.Graph(id = 'graph'), type = "circle")], 
-                        style = {'width': '40%', 'display': 'inline-block'}
+                        style = {'display': 'inline-block'}, className="col-sm-5"
                         ),
              html.Div([dcc.Loading(dcc.Graph(id = 'graph_fit'), type = "cube")], 
-                        style = {'width': '60%', 'display': 'inline-block'}
-                     ),
+                        style = {'display': 'inline-block'}, className="col-sm-7"
+                     )], className="row"),
              # Download inital curve with substracted baseline, fitted curve, peak curves and the best fit parameters 
              html.A(
                     'Download Subsracted Baseline Data',
@@ -218,6 +243,8 @@ app.layout = html.Div([
                     ),
                     #Block with fitting parameters table
              html.Div([
+             html.Div([
+                    html.P("Fitting parameters", style = {'text-align':'center','margin-top':'10px'}), 
                         dash_table.DataTable(
                         id = 'table-dropdown',
                         columns = [
@@ -243,7 +270,8 @@ app.layout = html.Div([
                                                ]
                                                 }
                                   }
-                                            ),
+                                            )], style={'margin-left': '5%', 'margin-right': '5%', 'width' : '90%'}, className="table-responsive"),
+                        html.Div([
                         html.P("ALS baseline parameters", style = {'text-align':'center','margin-top':'10px'}),                    
                         dash_table.DataTable(
                         id = 'table-dropdown-als',
@@ -265,7 +293,8 @@ app.layout = html.Div([
                                    ],
                         editable=True,
                                             ),                                            
-                 html.Div(id = 'table-dropdown-container')]),
+                 html.Div(id = 'table-dropdown-container')], style={'margin-left': '5%', 'margin-right': '5%', 'width' : '90%'}, className="table-responsive")
+                 ], className="row"),
                  html.Div(
                             [
                             html.P(
@@ -304,9 +333,8 @@ app.layout = html.Div([
                                     'Все эти 10 параметров задаются для каждого из пиков. По умолчанию значения каждого из параметров одинаковое для всех пиков и приведены в таблице. Однако для каждого из пика их можно изменять прямо в таблице. После изменения нажимается клавиша ввод и тогда значение измененного параметра будет учитываться при подгонке.')], 
                                     id = 'instruction'
                                     )
-                            ],
-                            style = {'display': 'inline-block','margin-left':'10px','margin-right':'10px','margin-top': '10px'}
-                            )
+                            ], className="container-sm")
+                            #style = {'display': 'inline-block','margin-left':'10px','margin-right':'10px','margin-top': '10px'},                            )
 
 """
 Code of callback for web-interface
@@ -320,7 +348,10 @@ Code of callback for web-interface
                 prevent_initial_call = True
             )
 
-    
+
+
+
+@cache.memoize(timeout=TIMEOUT)    
 def parse_contents(contents,filename):
     """
             Input:
@@ -370,6 +401,7 @@ def parse_contents(contents,filename):
                             i_=i_+2
 
                     try:
+                        print(i_)
                         c_ = fnd.readfile(res_, skiprows=i_+2)
                     except:
                         raise ValueError(f'Format of file is not supported.')
@@ -523,6 +555,15 @@ def smooth_als(n_clicks, res_, p_als, lam_als):
 def reset_data(n_clicks, res_):
     return [res_]
 
+@app.callback(
+                [Output('b', 'data',allow_duplicate = True)],
+                Input('submit-reset-2', 'n_clicks'),
+                [State('d', 'data')],
+                prevent_initial_call = True,
+              )
+def reset_data(n_clicks, res_):
+    return [res_]
+    
 # Update figure after re-peakdetect        
 @app.callback(
                 Output('graph', 'figure',allow_duplicate = True),
@@ -552,6 +593,26 @@ def update_line_chart(data_, filename):
                      )   
     return fig, data_['look'], data_['delta'], ','.join([str(round(i)) for i in data_['peaks']])
 
+@app.callback(
+                [Output('b', 'data',allow_duplicate = True)],
+                Input('submit-cut', 'n_clicks'),
+                State('graph', 'relayoutData'),
+                [State('b', 'data')],
+                prevent_initial_call = True,
+              )
+
+def arrange_figure(n_clicks, selected, data_):
+    x_range_min = selected['xaxis.range[0]']
+    x_range_max = selected['xaxis.range[1]']
+    if selected:
+            x_=[]
+            y_=[]
+            for num, value in enumerate(data_['spectrum'][0]):
+                    if (value>= x_range_min) and (value < x_range_max):
+                        x_.append(value)
+                        y_.append(data_['spectrum'][1][num])
+            data_['spectrum']=[np.array(x_),np.array(y_)]
+    return [data_]
 # Fit procedure callback
 @app.callback(
                 Output('graph_fit', 'figure'),
