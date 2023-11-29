@@ -25,7 +25,7 @@ import urllib
 import base64
 import io, os, sys, copy
 from flask_caching import Cache
-TIMEOUT = 60
+TIMEOUT = 400
 
 app = Dash(__name__, external_stylesheets=
                                         [dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],
@@ -49,6 +49,7 @@ app.layout = html.Div([
              dcc.Store(id = "b"), # The container for store of the dictionary number of peaks and loaded spectrum
              dcc.Store(id = "c"), # The container for store of the dictionary with the results of fitting (curves and parameters)
              dcc.Store(id = "d"), # The container for store of the dictionary number of peaks and smoothed spectrum
+             dcc.Store(id = 'phas'), # The container for phases saving
              # Upload file region
              dcc.Upload(
                         id = 'upload-data',
@@ -71,7 +72,68 @@ app.layout = html.Div([
                         # Allow multiple files to be uploaded for future?
                         multiple = False
                     ),
-             html.Div([    
+         dcc.Tabs([
+         dcc.Tab(label='Search phases', children=[
+         
+         html.Div([
+         
+         html.Div([dcc.Dropdown(
+    ['excellent-raman-rruf.h5', 'LR-broad-raman-rruf.h5', 'poor-fair-raman-rruf.h5', 'unrated-raman-rruf.h5'],
+    ['excellent-raman-rruf.h5', 'LR-broad-raman-rruf.h5'],
+    multi=True, id = 'dropdown-database')], style={'margin-top': 10, 'margin-bottom':10}, className='col-sm-8'),  
+    
+    html.Div([
+         html.H6('Similarity (0 - 1):',style={'display':'inline-block','margin-right':5, 'margin-left':10}),  
+                      # Als smoothing
+                      dbc.Input(
+                                id = "cosine",
+                                type = "number",
+                                value = 0.8,
+                                placeholder = "",
+                                step = 0.001,
+                                style={'display':'inline-block', 'width': 85,'vertical-align': 'middle'} 
+                                ), 
+                      html.H6('Number of printed phases:',style={'display':'inline-block','margin-right':5, 'margin-left':10}),  
+                      dbc.Input(
+                                id = "num_phases",
+                                type = "number",
+                                value = 10,
+                                placeholder = "",
+                                style = {'display':'inline-block', 'width': 85,'vertical-align': 'middle'} 
+                                ),
+                      dbc.Button("Search", 
+                                color = "primary", 
+                                className = "me-2", 
+                                id = 'submit-search', 
+                                n_clicks = 0, 
+                                style = {"display": "inline-block",'vertical-align': 'middle', 'margin-left': "10px"}
+                                ),          
+                                
+                                
+                                ], className='col-sm-8'),
+              html.Div([dcc.Loading(dcc.Graph(id = 'graph_phases'), type = "circle")]),              
+         html.Div([
+                        html.P("Found phases", style = {'text-align':'center','margin-top':'10px'}),                    
+                        dash_table.DataTable(
+                        id = 'table-dropdown-phases',
+                        columns = [
+                                    
+                                    {'id': 'name', 'name': 'Name'},
+                                    {'id': 'id', 'name': 'ID'},
+                                    {'id': 'hyperlink', 'name': 'Web', 'presentation': 'markdown'},
+                                    {'id': 'R-factor', 'name': 'Similarity'},
+                                    
+                                   ],
+                        editable=False,
+                                            ),                                            
+                 ], style={'margin-left': '5%', 'margin-right': '5%', 'width' : '90%'}, className="table-responsive")
+         
+         
+         
+         
+         
+         ], className='row'),]),
+        dcc.Tab(label='Deconvolution', children=[     html.Div([    
                       dcc.Tabs([
         dcc.Tab(label='Moving average smoothing', children=[
                       html.Div([html.H6('Smooth window:',style={'display':'inline-block','margin-right':5, 'margin-left':10}),
@@ -332,7 +394,7 @@ app.layout = html.Div([
                             html.P(
                                     'Все эти 10 параметров задаются для каждого из пиков. По умолчанию значения каждого из параметров одинаковое для всех пиков и приведены в таблице. Однако для каждого из пика их можно изменять прямо в таблице. После изменения нажимается клавиша ввод и тогда значение измененного параметра будет учитываться при подгонке.')], 
                                     id = 'instruction'
-                                    )
+                                    )])]),
                             ], className="container-sm")
                             #style = {'display': 'inline-block','margin-left':'10px','margin-right':'10px','margin-top': '10px'},                            )
 
@@ -429,6 +491,7 @@ def parse_contents(contents,filename):
 @app.callback(
                 
                 Output('table-dropdown', 'data'),
+                Output('graph_phases', 'figure'),
                 Output('graph', 'figure'),
                 Output('lookahead', 'value'),
                 Output('delta', 'value'),
@@ -479,7 +542,7 @@ def update_line_chart(contents):
                         }
                       )
     
-    return params, fig, data_['look'], data_['delta'], ','.join([str(round(i)) for i in data_['peaks']])
+    return params, fig, fig, data_['look'], data_['delta'], ','.join([str(round(i)) for i in data_['peaks']])
 
 # Find peaks again with new lookahead and lambda parameters    
 @app.callback(
@@ -556,7 +619,7 @@ def reset_data(n_clicks, res_):
     return [res_]
 
 @app.callback(
-                [Output('b', 'data',allow_duplicate = True)],
+                [Output('b', 'data', allow_duplicate = True)],
                 Input('submit-reset-2', 'n_clicks'),
                 [State('d', 'data')],
                 prevent_initial_call = True,
@@ -613,6 +676,50 @@ def arrange_figure(n_clicks, selected, data_):
                         y_.append(data_['spectrum'][1][num])
             data_['spectrum']=[np.array(x_),np.array(y_)]
     return [data_]
+    
+    
+@app.callback(
+                Output('graph_phases', 'figure', allow_duplicate = True),
+                Output('table-dropdown-phases', 'data'),
+                Input('submit-search', 'n_clicks'),
+                State('dropdown-database', 'value'),
+                [State('b', 'data')],
+                State('num_phases', 'value'),
+                State('cosine', 'value'),
+                prevent_initial_call = True,
+            )
+@cache.memoize(timeout=TIMEOUT)            
+def plot_phases(n_clicks, db_string, data_,nphases, cos_):
+    path='.//databases//'
+    fig = go.Figure()                    
+    fig = fig.add_trace(go.Scatter(
+                                    x = data_['spectrum'][0], 
+                                    y = data_['spectrum'][1],
+                                    mode = 'lines',
+                                    name = 'Initial spectrum'
+                                    ),
+                        )
+    phase_table=[]                    
+    for b_ in db_string:
+                fname_=path+b_
+                founded_names, founded_phases = fnd.find_phase(
+                                        data_['spectrum'][0],
+                                        data_['spectrum'][1],
+                                        dbname=fname_, 
+                                        print_number = nphases, 
+                                        sim = cos_, 
+                                        )
+
+                # Plot the initial spectrum
+                for item in founded_phases:
+                    fig = fig.add_trace(go.Scatter(
+                                                    x = item['x'], y = item['y']/max(item['y']),
+                                                    mode = 'lines',
+                                                    name = item['label']
+                                                    ),
+                                        )
+                phase_table.extend(founded_names)
+    return fig, phase_table    
 # Fit procedure callback
 @app.callback(
                 Output('graph_fit', 'figure'),
@@ -656,7 +763,8 @@ def update_fitline_chart(n_clicks, peaks, data_, filename, tolerance,table_par,t
                                     row = 1,
                                     col = 1
                         )
-    # Plot the best fit curve                   
+    # Plot the best fit curve  
+    
     fig = fig.add_trace(go.Scatter(
                                     x = data_['output'][0], 
                                     y = data_['output'][1],
@@ -707,6 +815,7 @@ def update_fitline_chart(n_clicks, peaks, data_, filename, tolerance,table_par,t
     xaxis_title = "Wavenumber, cm-1",
     yaxis_title = "Intensity")   
     return fig, csv_string_s, csv_string_f, csv_string_p, csv_string_pa 
+
 
     
 app.run_server(host= '0.0.0.0',debug = True)

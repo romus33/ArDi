@@ -16,6 +16,7 @@ import numpy as np
 #import scipy.special as sp
 #import os,sys,math
 import fittingmap as mm
+import readwriteir5 as rm
 
 def smooth_als(y, lam, p):
     fit_ = mm.FittingMap()
@@ -122,8 +123,8 @@ def fitcurve(xx,yy,peaks_str,parameters = None, parameter_als=None, tolerance = 
             limits['amplitude'] = np.array(l_amplitude)
             limits['width'] = np.array(l_width)
             limits['center'] = np.array(l_center)
-        print(params)
-        print(limits)        
+        # print(params)
+        # print(limits)        
         result = fit.fit_array(xx,yy,params,limits,fname)
 
         A = result['amplitude']
@@ -161,11 +162,11 @@ def fitcurve(xx,yy,peaks_str,parameters = None, parameter_als=None, tolerance = 
         #Рисуем и сохраняем кривые
         return {'input': [xx,yy], 'output': [x1, y1], 'components': fit.components, 'length_in': length_, 'length_out':  length_2, 'params': fit_param}
 
-def find_phase(spectrum, dbname = None, print_number = 10, sim = 0.8):
+def find_phase(xx, yy, dbname = None, print_number = 10, sim = 0.8):
     if dbname is not None:
-            dbRead = mm.ReadWrite5()
+            dbRead = rm.ReadWrite5()
             db = dbRead.readh5(fname=dbname)
-            spectra = dbRead.readh5_all(fname = dbname)
+            spectra = dbRead.readh5_all(db)
             fnd = dbRead.findphase_h5(xx, yy, db, sim)
             search_result = {}
             search_result['n_phases'] = fnd["num"]
@@ -178,8 +179,10 @@ def find_phase(spectrum, dbname = None, print_number = 10, sim = 0.8):
             for val in range(max_num):
                     str_ = spectra[str(fnd["num"][val])][2]
                     b = str_.split('_')
-                    founded_names.append({'r-square': format(fnd["r"][val], '.4f'), 'name': b[0], 'id': b[1]})
-                    str_=b[0]+'_'+b[1]
+                    #print(b)
+                    hyp_='[RRUF]('+'https://rruff.info/'+str(b[2])+')'
+                    founded_names.append({'R-factor': format(fnd["r"][val], '.4f'), 'name': b[0], 'id': b[2], 'hyperlink': hyp_})
+                    str_=b[0]+'_'+b[2]
                     founded_phases.append({'x': spectra[str(fnd["num"][val])][0], 'y': spectra[str(fnd["num"][val])][1], 'label': str_})
             return founded_names, founded_phases
     else:
