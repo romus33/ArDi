@@ -470,7 +470,6 @@ class ReadWrite5(object):
                 dbY_s = dbY - a[2]
                 dbY_s = np.interp(x, dbX, dbY_s)
                 r_ = np.dot(dbY_s, y) / (np.linalg.norm(dbY_s) * np.linalg.norm(y))
-                r_=0
                 dbY = np.interp(x, dbX, dbY)
                 r = np.dot(dbY, y) / (np.linalg.norm(dbY) * np.linalg.norm(y))
                 

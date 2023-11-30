@@ -204,7 +204,7 @@ def find_phase(xx, yy, dbname = None, print_number = 10, sim = 0.8):
                     cnt_ = cnt_+1
                     str_ = val["name"]
                     b = str_.split('_')
-                    #print(b)
+                    print(b)
                     hyp_='[RRUF]('+'https://rruff.info/'+str(b[1])+')'
                     founded_names.append({'R-factor': format(val["r"], '.4f'), 'name': b[0], 'id': b[1], 'hyperlink': hyp_})
                     str_=b[0]+'_'+b[1]
