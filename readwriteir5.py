@@ -8,6 +8,7 @@ import platform
 from termcolor import colored
 import time as tm
 import progressbar as pb
+from scipy.stats.stats import pearsonr
 
 os.system('color')
 
@@ -15,18 +16,9 @@ os.system('color')
 if platform.uname()[0] == "Windows":
     name_dll = "convolution.dll"
 else:
-    name_dll = "convolution.so"
+    name_dll = "/home/ardi/ArDi/convolution.so"
 myclib = cdll.LoadLibrary(name_dll)
 
-
-def filled(tmp_arr, r_ref):
-    ind = np.argwhere(tmp_arr > r_ref).ravel()
-    ind = ind[np.argsort(-tmp_arr[ind])]
-    arr = []
-    for val in ind:
-        arr.append(tmp_arr[val])
-    founded = {'num': ind, 'r': arr}
-    return founded
 
 
 class ReadWrite5(object):
@@ -39,6 +31,15 @@ class ReadWrite5(object):
         self.y1=[]
         self.y2=[]
         self.__pBar__ = pb.ProgressBar(tm.time())
+
+
+    def pairwise_correlation(self, A, B):
+        am = A - np.mean(A, axis=0, keepdims=True)
+        bm = B - np.mean(B, axis=0, keepdims=True)
+        return am.T @ bm /  (np.sqrt(
+            np.sum(am**2, axis=0,
+               keepdims=True)).T * np.sqrt(
+            np.sum(bm**2, axis=0, keepdims=True)))
 
     @staticmethod
     # Change dataset in h5 database
@@ -455,6 +456,8 @@ class ReadWrite5(object):
         return filled(tmp_arr, r_ref)
     def find_phase_in(self, x, y, dbname=None, r_ref=0.8):
         if dbname is not None:
+            y=np.array(y) 
+            x=np.array(x)
             f = h5py.File(dbname, 'r')
             count_i = 0
             group='uncorrected'
@@ -465,14 +468,13 @@ class ReadWrite5(object):
             found_phases_=[]
             for key in ls:
                 a = gr.get(key)
-                dbX = a[0]
-                dbY = a[1]
-                dbY_s = dbY - a[2]
+                dbX = np.array(a[0])
+                dbY = np.array(a[1])
+                dbY_s = dbY - np.array(a[2])
                 dbY_s = np.interp(x, dbX, dbY_s)
-                r_ = np.dot(dbY_s, y) / (np.linalg.norm(dbY_s) * np.linalg.norm(y))
+                r_ = self.pairwise_correlation(y, dbY_s)[0]
                 dbY = np.interp(x, dbX, dbY)
-                r = np.dot(dbY, y) / (np.linalg.norm(dbY) * np.linalg.norm(y))
-                
+                r = self.pairwise_correlation(y, dbY)[0]
                 if r>r_:
                     if (r>=r_ref):
                         #print('!!!!!')

@@ -197,12 +197,16 @@ def find_phase(xx, yy, dbname = None, print_number = 10, sim = 0.8):
             founded_phases=[]
             cnt_=0
             #print(type(spectra))
-            d_spectra = sorted(spectra, key=lambda d: d['r'], reverse=True)
+            if spectra:
+                    #print(spectra)
+                    d_spectra = sorted(spectra, key=lambda d: d['r'], reverse=True)
+            else:
+                    return [], []
             #print(d_spectra)
             for val in d_spectra:
                 
                 if cnt_<print_number:
-
+            
                     cnt_ = cnt_+1
                     str_ = val["name"]
                     b = str_.split('_')
@@ -212,6 +216,8 @@ def find_phase(xx, yy, dbname = None, print_number = 10, sim = 0.8):
                     str_=b[0]+'_'+b[1]
                     founded_phases.append({'x': val["x"], 'y': val["y"], 'label': str_})
                 else:
-                    return founded_names, founded_phases
+                    break
+                    
+            return founded_names, founded_phases
     else:
             raise ValueError(f'Empty db name')             

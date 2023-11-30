@@ -728,7 +728,8 @@ def plot_phases(n_clicks, db_string, data_,nphases, cos_):
                                                     name = item['label']
                                                     ),
                                         )
-                phase_table.extend(founded_names)
+                
+                if founded_names is not None: phase_table.extend(founded_names)
     return fig, phase_table    
 # Fit procedure callback
 @app.callback(
