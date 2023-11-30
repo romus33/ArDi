@@ -17,7 +17,7 @@ import numpy as np
 #import os,sys,math
 import fittingmap as mm
 import readwriteir5 as rm
-from collections import OrderedDict
+import time
 
 def smooth_als(y, lam, p):
     fit_ = mm.FittingMap()
@@ -68,7 +68,8 @@ def peakdetect(xx, yy, lookahead = 1, delta = 0.011):
         spectra['ampl'] = ampl
         return spectra
  
-def fitcurve(xx,yy,peaks_str,parameters = None, parameter_als=None, tolerance = 1e-15):
+def fitcurve(xx,yy,peaks_str,parameters = None, parameter_als=None, tolerance = 1e-15, max_nfev=1000):
+        start_time=time.time()
         limits = {}
         ma = {}
         i = 0  
@@ -89,7 +90,7 @@ def fitcurve(xx,yy,peaks_str,parameters = None, parameter_als=None, tolerance = 
             params['baseline_auto'] = [float(parameter_als[0]["p_lam"]), float(parameter_als[0]["p_p"]), 5]
             limits['baseline_auto'] = [[float(parameter_als[0]["l_lam_min"]),float(parameter_als[0]["l_lam_max"])], [float(parameter_als[0]["l_p_min"]),float(parameter_als[0]["l_p_max"])]]
         params['kws'] = {'ftol': tolerance, 'xtol': tolerance, 'gtol': tolerance}
-        params['max_nfev'] = 10000000
+        params['max_nfev'] = max_nfev
 
         if parameters is None:
             params['amplitude'] = np.full(len(x),1)
@@ -160,6 +161,7 @@ def fitcurve(xx,yy,peaks_str,parameters = None, parameter_als=None, tolerance = 
         #ddd = xx
         length_ = len(xx)
         length_2 = len(x1)
+        print('Time: ', time.time()-start_time)
         #Рисуем и сохраняем кривые
         return {'input': [xx,yy], 'output': [x1, y1], 'components': fit.components, 'length_in': length_, 'length_out':  length_2, 'params': fit_param}
 

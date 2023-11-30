@@ -226,7 +226,16 @@ app.layout = html.Div([
                         value = 1e-15,
                         placeholder = "",
                         style={'display':'inline-block', 'width': 85, 'margin-left': 5,'vertical-align': 'middle'} 
-                       ),        
+                       ), 
+             html.H6('Max_iter:',style={'display':'inline-block','margin': 10,'vertical-align': 'middle'}),
+             # Fittig peaks             
+             dbc.Input(
+                        id = "max_nfev",
+                        type = "number",
+                        value = 1000,
+                        placeholder = "",
+                        style={'display':'inline-block', 'width': 125, 'margin-left': 5,'vertical-align': 'middle'} 
+                       ),                        
              dbc.Button("Fit", 
                             color = "success", 
                             className = "me-2", 
@@ -247,7 +256,7 @@ app.layout = html.Div([
                         id = "peaks",
                         type = "text",
                         placeholder = "Found peaks",
-                        style = {'width': '99%', 'textAlign': 'center', 'margin':'auto'}, 
+                        style = {'width': '99%', 'textAlign': 'center', 'margin':'auto', 'font-size': 16}, 
                         className = "form-control form-control-sm"
                        )], className="row"),
              # Plot graphs  
@@ -744,12 +753,13 @@ def plot_phases(n_clicks, db_string, data_,nphases, cos_):
                 [State('b', 'data')],
                 State('upload-data', 'filename'),
                 State('tolerance','value'),
+                State('max_nfev', 'value'),
                 State('table-dropdown','data'),
                 State('table-dropdown-als', 'data'),
                 prevent_initial_call = True,
             )
     
-def update_fitline_chart(n_clicks, peaks, data_, filename, tolerance,table_par,table_als):
+def update_fitline_chart(n_clicks, peaks, data_, filename, tolerance,max_nfev, table_par, table_als):
 
     data_ = fnd.fitcurve(
                             data_['spectrum'][0],
@@ -757,7 +767,8 @@ def update_fitline_chart(n_clicks, peaks, data_, filename, tolerance,table_par,t
                             peaks, 
                             parameters = table_par, 
                             parameter_als = table_als, 
-                            tolerance = tolerance
+                            tolerance = tolerance,
+                            max_nfev=max_nfev
                         )
     fig = go.Figure()
     df_peaks = {}

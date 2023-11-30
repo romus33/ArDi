@@ -16,7 +16,7 @@ os.system('color')
 if platform.uname()[0] == "Windows":
     name_dll = "convolution.dll"
 else:
-    name_dll = "/home/ardi/ArDi/convolution.so"
+    name_dll = "convolution.so"
 myclib = cdll.LoadLibrary(name_dll)
 
 

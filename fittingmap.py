@@ -625,7 +625,7 @@ class FittingMap(object):
             params['kws'] = {'ftol': 1e-8, 'xtol': 1e-8, 'gtol': 1e-8}
         fit_kws = params['kws']
         if 'max_nfev' not in params.keys():
-            params['max_nfev'] = 100000
+            params['max_nfev'] = 1000
             
         mod = None
         if (params['method'][0] == 'Als'):
