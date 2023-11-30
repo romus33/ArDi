@@ -475,10 +475,11 @@ class ReadWrite5(object):
                 
                 if r>r_:
                     if (r>=r_ref):
-                        
+                        #print('!!!!!')
                         found_phases_.append({"key": key, "r": r, "name":  a.attrs["name"], "x": x, "y": dbY})
                 else:
                     if (r_>=r_ref):
+                        #print('??????')
                         found_phases_.append({"key": key, "r": r_, "name":  a.attrs["name"], "x": x, "y": dbY})
                 count_i = count_i+1
                 self.__pBar__.printProgressBar(count_i, length, prefix='Progress:', suffix='', length=50)

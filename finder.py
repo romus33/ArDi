@@ -198,17 +198,20 @@ def find_phase(xx, yy, dbname = None, print_number = 10, sim = 0.8):
             cnt_=0
             #print(type(spectra))
             d_spectra = sorted(spectra, key=lambda d: d['r'], reverse=True)
+            #print(d_spectra)
             for val in d_spectra:
-                #print(val)
+                
                 if cnt_<print_number:
+
                     cnt_ = cnt_+1
                     str_ = val["name"]
                     b = str_.split('_')
-                    print(b)
+                    # print(b)
                     hyp_='[RRUF]('+'https://rruff.info/'+str(b[1])+')'
                     founded_names.append({'R-factor': format(val["r"], '.4f'), 'name': b[0], 'id': b[1], 'hyperlink': hyp_})
                     str_=b[0]+'_'+b[1]
                     founded_phases.append({'x': val["x"], 'y': val["y"], 'label': str_})
+                else:
                     return founded_names, founded_phases
     else:
             raise ValueError(f'Empty db name')             
