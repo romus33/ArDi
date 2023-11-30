@@ -262,10 +262,10 @@ app.layout = html.Div([
              # Plot graphs  
              html.Div([
              html.Div([dcc.Loading(dcc.Graph(id = 'graph'), type = "circle")], 
-                        style = {'display': 'inline-block'}, className="col-sm-5"
+                        style = {'display': 'inline-block'}, className="col-sm-7"
                         ),
              html.Div([dcc.Loading(dcc.Graph(id = 'graph_fit'), type = "cube")], 
-                        style = {'display': 'inline-block'}, className="col-sm-7"
+                        style = {'display': 'inline-block'}, className="col-sm-5"
                      )], className="row"),
              # Download inital curve with substracted baseline, fitted curve, peak curves and the best fit parameters 
              html.A(
@@ -357,18 +357,19 @@ app.layout = html.Div([
                         html.P("ALS baseline parameters", style = {'text-align':'center','margin-top':'10px'}),                    
                         dash_table.DataTable(
                         id = 'table-dropdown-als',
-                        data = [{'p_p': 0.005, 'l_p_min': 0.0001, 'l_p_max': 0.1, 'p_lam': 1e7, 'l_lam_min': 1e5, 'l_lam_max': 1e9}],
+                        data = [{'l_p_min': 0.0001, 'p_p': 0.005, 'l_p_max': 0.1, 'l_lam_min': 1e5, 'p_lam': 1e7, 'l_lam_max': 1e9}],
                         columns = [
-                                    {'id': 'p_p', 'name': 'ALS p-parameter (p)'},
                                     {'id': 'l_p_min', 'name': 'ALS p_min'},
-                                    {'id': 'l_p_max', 'name': 'ALS p_max'},
+                                    {'id': 'p_p', 'name': 'ALS p-parameter (p)'},
+                                     {'id': 'l_p_max', 'name': 'ALS p_max'},
+
+                                    dict(id = 'l_lam_min', name='ALS lam_min', type='numeric', format=Format(precision=2, scheme=Scheme.decimal_or_exponent)),
                                     dict(
                                         id = 'p_lam', 
                                         name='ALS Lambda parameter (lam)', 
                                         type='numeric', 
                                         format=Format(precision=2, scheme=Scheme.decimal_or_exponent)
                                         ),
-                                    dict(id = 'l_lam_min', name='ALS lam_min', type='numeric', format=Format(precision=2, scheme=Scheme.decimal_or_exponent)),
                                     dict(id = 'l_lam_max', name='ALS lam_max', type='numeric', format=Format(precision=2, scheme=Scheme.decimal_or_exponent)),
 
                                     

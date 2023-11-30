@@ -691,7 +691,7 @@ class FittingMap(object):
             H = np.array([out.params['f' + repr(num) + '_height'] for num in range(number_of_peaks)])
             Rsq = 1 - out.redchi / np.var(y, ddof=0)
             S = np.array([out.params['f' + repr(num) + '_sigma'] for num in range(number_of_peaks)])
-            return {'amplitude': A, 'FWHM': FWHM, 'center': C, 'height': H, 'r-square': Rsq, 'sigma': S}
+            return {'amplitude': A, 'FWHM': FWHM, 'center': C, 'height': H, 'r-square': Rsq, 'sigma': S, 'p': out.params['bg_p'], 'lam': out.params['bg_lam']}
 
     @staticmethod
     def __init_C__(args):

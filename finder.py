@@ -155,7 +155,7 @@ def fitcurve(xx,yy,peaks_str,parameters = None, parameter_als=None, tolerance = 
                       FWHM[idx[0]].astype('str')+"\t||\t"+
                       H[idx[0]].astype('str')
                       )
-        fit_param = {'Center':np.array(C_), 'Amplitude': np.array(A_),'Sigma': np.array(S_), 'FWHM': np.array(F_), 'Height': np.array(H_),  'R-Square': Rsq}
+        fit_param = {'Center':np.array(C_), 'Amplitude': np.array(A_),'Sigma': np.array(S_), 'FWHM': np.array(F_), 'Height': np.array(H_),'Method': params['method'], 'R-Square': Rsq, 'p': result['p'], 'lam': result['lam']}
         x1 = fit.map_baseline[fname][0]
         y1 = fit.map_baseline[fname][1]
         #ddd = xx
