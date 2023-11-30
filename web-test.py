@@ -24,8 +24,8 @@ import pandas as pd
 import urllib
 import base64
 import io, os, sys, copy
-from flask_caching import Cache
-TIMEOUT = 400
+#from flask_caching import Cache
+#TIMEOUT = 400
 
 app = Dash(__name__, external_stylesheets=
                                         [dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],
@@ -37,12 +37,12 @@ app = Dash(__name__, external_stylesheets=
            )
 app.title = "ArDI"
 app._favicon = ("assets/favicon.ico")
-cache = Cache(app.server, 
-                config={
-                         'CACHE_TYPE': 'filesystem',
-                         'CACHE_DIR': 'cache-directory'
-                        }
-             )
+# cache = Cache(app.server, 
+                # config={
+                         # 'CACHE_TYPE': 'filesystem',
+                         # 'CACHE_DIR': 'cache-directory'
+                        # }
+             # )
              
 app.layout = html.Div([
                       html.H2('ArDI (Advanced spectRa Deconvolution Instrument)',style={'text-align': 'center'}),
@@ -78,8 +78,8 @@ app.layout = html.Div([
          html.Div([
          
          html.Div([dcc.Dropdown(
-    ['excellent-raman-rruf.h5', 'LR-broad-raman-rruf.h5', 'poor-fair-raman-rruf.h5', 'unrated-raman-rruf.h5'],
-    ['excellent-raman-rruf.h5', 'LR-broad-raman-rruf.h5'],
+    ['excellent-raman-rruf.h5','LR-broad-raman-rruf-n.h5', 'LR-broad-raman-rruf.h5', 'poor-fair-raman-rruf.h5', 'unrated-raman-rruf.h5', 'LR-broad-raman-rruf-m.h5'],
+    ['LR-broad-raman-rruf.h5'],
     multi=True, id = 'dropdown-database')], style={'margin-top': 10, 'margin-bottom':10}, className='col-sm-8'),  
     
     html.Div([
@@ -424,7 +424,7 @@ Code of callback for web-interface
 
 
 
-@cache.memoize(timeout=TIMEOUT)    
+#@cache.memoize(timeout=TIMEOUT)    
 def parse_contents(contents,filename):
     """
             Input:
@@ -685,7 +685,7 @@ def arrange_figure(n_clicks, selected, data_):
                     if (value>= x_range_min) and (value < x_range_max):
                         x_.append(value)
                         y_.append(data_['spectrum'][1][num])
-            data_['spectrum']=[np.array(x_),np.array(y_)]
+            data_['spectrum']=[np.array(x_),np.array(y_)/max(np.array(y_))]
     return [data_]
     
     
@@ -699,7 +699,7 @@ def arrange_figure(n_clicks, selected, data_):
                 State('cosine', 'value'),
                 prevent_initial_call = True,
             )
-@cache.memoize(timeout=TIMEOUT)            
+#@cache.memoize(timeout=TIMEOUT)            
 def plot_phases(n_clicks, db_string, data_,nphases, cos_):
     path='.//databases//'
     fig = go.Figure()                    
@@ -720,7 +720,6 @@ def plot_phases(n_clicks, db_string, data_,nphases, cos_):
                                         print_number = nphases, 
                                         sim = cos_, 
                                         )
-
                 # Plot the initial spectrum
                 for item in founded_phases:
                     fig = fig.add_trace(go.Scatter(

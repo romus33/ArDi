@@ -444,9 +444,47 @@ class ReadWrite5(object):
                 else:
                     cnt=1
             dbX = np.linspace(db[str(cnt)]["xmin"], db[str(cnt)]["xmax"], db[str(cnt)]["npoints"])
+            #print(dbX)
+            #print(x)
             dbY = np.array(db[str(cnt)]["ydata"])
             dbY = np.interp(x, dbX, dbY)
-            dbY = dbY-self.__baseline_als_dll__(dbY)
+            dbY=dbY/max(dbY)
+            # dbY = dbY-self.__baseline_als_dll__(dbY)
             r = np.dot(dbY, y) / (np.linalg.norm(dbY) * np.linalg.norm(y))
             tmp_arr[cnt] = r
         return filled(tmp_arr, r_ref)
+    def find_phase_in(self, x, y, dbname=None, r_ref=0.8):
+        if dbname is not None:
+            f = h5py.File(dbname, 'r')
+            count_i = 0
+            group='uncorrected'
+            gr = f.get(group)
+            ls = list(gr.keys())
+            length=len(ls)
+            self.__pBar__.printProgressBar(0, length, prefix='Progress:', suffix='', length=50)
+            found_phases_=[]
+            for key in ls:
+                a = gr.get(key)
+                dbX = a[0]
+                dbY = a[1]
+                dbY_s = dbY - a[2]
+                dbY_s = np.interp(x, dbX, dbY_s)
+                r_ = np.dot(dbY_s, y) / (np.linalg.norm(dbY_s) * np.linalg.norm(y))
+                r_=0
+                dbY = np.interp(x, dbX, dbY)
+                r = np.dot(dbY, y) / (np.linalg.norm(dbY) * np.linalg.norm(y))
+                
+                if r>r_:
+                    if (r>=r_ref):
+                        
+                        found_phases_.append({"key": key, "r": r, "name":  a.attrs["name"], "x": x, "y": dbY})
+                else:
+                    if (r_>=r_ref):
+                        found_phases_.append({"key": key, "r": r_, "name":  a.attrs["name"], "x": x, "y": dbY})
+                count_i = count_i+1
+                self.__pBar__.printProgressBar(count_i, length, prefix='Progress:', suffix='', length=50)
+
+            return found_phases_
+        else:
+            raise ValueError(f'Empty db name')     
+        

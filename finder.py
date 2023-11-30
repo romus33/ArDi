@@ -17,6 +17,7 @@ import numpy as np
 #import os,sys,math
 import fittingmap as mm
 import readwriteir5 as rm
+from collections import OrderedDict
 
 def smooth_als(y, lam, p):
     fit_ = mm.FittingMap()
@@ -162,28 +163,52 @@ def fitcurve(xx,yy,peaks_str,parameters = None, parameter_als=None, tolerance = 
         #Рисуем и сохраняем кривые
         return {'input': [xx,yy], 'output': [x1, y1], 'components': fit.components, 'length_in': length_, 'length_out':  length_2, 'params': fit_param}
 
+# def find_phase(xx, yy, dbname = None, print_number = 10, sim = 0.8):
+    # if dbname is not None:
+            # dbRead = rm.ReadWrite5()
+            # db = dbRead.readh5(fname=dbname)
+            # spectra = dbRead.readh5_all(db)
+            # fnd = dbRead.findphase_h5(xx, yy, db, sim)
+            # search_result = {}
+            # search_result['n_phases'] = fnd["num"]
+            # if len(search_result['n_phases']) > print_number:
+                    # max_num = print_number
+            # else:
+                    # max_num = len(search_result['n_phases'])
+            # founded_names=[]
+            # founded_phases=[]            
+            # for val in range(max_num):
+                    # str_ = spectra[str(fnd["num"][val])][2]
+                    # b = str_.split('_')
+                    # #print(b)
+                    # hyp_='[RRUF]('+'https://rruff.info/'+str(b[2])+')'
+                    # founded_names.append({'R-factor': format(fnd["r"][val], '.4f'), 'name': b[0], 'id': b[2], 'hyperlink': hyp_})
+                    # str_=b[0]+'_'+b[2]
+                    # founded_phases.append({'x': spectra[str(fnd["num"][val])][0], 'y': spectra[str(fnd["num"][val])][1], 'label': str_})
+            # return founded_names, founded_phases
+    # else:
+            # raise ValueError(f'Empty db') 
+            
 def find_phase(xx, yy, dbname = None, print_number = 10, sim = 0.8):
     if dbname is not None:
             dbRead = rm.ReadWrite5()
-            db = dbRead.readh5(fname=dbname)
-            spectra = dbRead.readh5_all(db)
-            fnd = dbRead.findphase_h5(xx, yy, db, sim)
-            search_result = {}
-            search_result['n_phases'] = fnd["num"]
-            if len(search_result['n_phases']) > print_number:
-                    max_num = print_number
-            else:
-                    max_num = len(search_result['n_phases'])
+            spectra = dbRead.find_phase_in(xx, yy, dbname=dbname, r_ref=sim)
             founded_names=[]
-            founded_phases=[]            
-            for val in range(max_num):
-                    str_ = spectra[str(fnd["num"][val])][2]
+            founded_phases=[]
+            cnt_=0
+            #print(type(spectra))
+            d_spectra = sorted(spectra, key=lambda d: d['r'], reverse=True)
+            for val in d_spectra:
+                #print(val)
+                if cnt_<print_number:
+                    cnt_ = cnt_+1
+                    str_ = val["name"]
                     b = str_.split('_')
                     #print(b)
-                    hyp_='[RRUF]('+'https://rruff.info/'+str(b[2])+')'
-                    founded_names.append({'R-factor': format(fnd["r"][val], '.4f'), 'name': b[0], 'id': b[2], 'hyperlink': hyp_})
-                    str_=b[0]+'_'+b[2]
-                    founded_phases.append({'x': spectra[str(fnd["num"][val])][0], 'y': spectra[str(fnd["num"][val])][1], 'label': str_})
-            return founded_names, founded_phases
+                    hyp_='[RRUF]('+'https://rruff.info/'+str(b[1])+')'
+                    founded_names.append({'R-factor': format(val["r"], '.4f'), 'name': b[0], 'id': b[1], 'hyperlink': hyp_})
+                    str_=b[0]+'_'+b[1]
+                    founded_phases.append({'x': val["x"], 'y': val["y"], 'label': str_})
+                    return founded_names, founded_phases
     else:
-            raise ValueError(f'Empty db') 
+            raise ValueError(f'Empty db name')             
