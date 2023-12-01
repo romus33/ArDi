@@ -45,229 +45,419 @@ cache = Cache(app.server,
              )
              
 app.layout = html.Div([
-                      html.H2('ArDI (Advanced spectRa Deconvolution Instrument)',style={'text-align': 'center'}),
-             dcc.Store(id = "b"), # The container for store of the dictionary number of peaks and loaded spectrum
-             dcc.Store(id = "c"), # The container for store of the dictionary with the results of fitting (curves and parameters)
-             dcc.Store(id = "d"), # The container for store of the dictionary number of peaks and smoothed spectrum
-             dcc.Store(id = 'phas'), # The container for phases saving
-             # Upload file region
-             dcc.Upload(
-                        id = 'upload-data',
-                        children=html.Div([
-                                            'Drag and Drop or ',
-                                            html.A('Select Files')
-                                          ]),
-                        style={
-                                'width': '99%',
-                                'justify-content': 'center',
-                                'height': '60px',
-                                'lineHeight': '60px',
-                                'borderWidth': '1px',
-                                'borderStyle': 'dashed',
-                                'borderRadius': '5px',
-                                'text-align': 'center',
-                                'align-items': 'center',
-                                'margin': '10px'
-                                },
-                        # Allow multiple files to be uploaded for future?
-                        multiple = False
-                    ),
-         dcc.Tabs([
-         dcc.Tab(label='Search phases', children=[
-         
-         html.Div([
-         
-         html.Div([dcc.Dropdown(
-    ['excellent-raman-rruf.h5','LR-broad-raman-rruf-n.h5', 'LR-broad-raman-rruf.h5', 'poor-fair-raman-rruf.h5', 'unrated-raman-rruf.h5', 'LR-broad-raman-rruf-m.h5'],
-    ['LR-broad-raman-rruf.h5'],
-    multi=True, id = 'dropdown-database')], style={'margin-top': 10, 'margin-bottom':10}, className='col-sm-8'),  
-    
-    html.Div([
-         html.H6('Similarity (0 - 1):',style={'display':'inline-block','margin-right':5, 'margin-left':10}),  
-                      # Als smoothing
-                      dbc.Input(
-                                id = "cosine",
-                                type = "number",
-                                value = 0.8,
-                                placeholder = "",
-                                step = 0.001,
-                                style={'display':'inline-block', 'width': 85,'vertical-align': 'middle'} 
-                                ), 
-                      html.H6('Number of printed phases:',style={'display':'inline-block','margin-right':5, 'margin-left':10}),  
-                      dbc.Input(
-                                id = "num_phases",
-                                type = "number",
-                                value = 10,
-                                placeholder = "",
-                                style = {'display':'inline-block', 'width': 85,'vertical-align': 'middle'} 
+                    html.H2('ArDI (Advanced spectRa Deconvolution Instrument)',style={'text-align': 'center'}),
+                    dcc.Store(id = "b"), # The container for store of the dictionary number of peaks and loaded spectrum
+                    dcc.Store(id = "c"), # The container for store of the dictionary with the results of fitting (curves and parameters)
+                    dcc.Store(id = "d"), # The container for store of the dictionary number of peaks and smoothed spectrum
+                    dcc.Store(id = 'phas'), # The container for phases saving
+                    # Upload file region
+                    dcc.Upload(
+                                id = 'upload-data',
+                                children=html.Div([
+                                                    'Drag and Drop or ',
+                                                    html.A('Select Files')
+                                                 ]),
+                                style={
+                                        'width': '99%',
+                                        'justify-content': 'center',
+                                        'height': '60px',
+                                        'lineHeight': '60px',
+                                        'borderWidth': '1px',
+                                        'borderStyle': 'dashed',
+                                        'borderRadius': '5px',
+                                        'text-align': 'center',
+                                        'align-items': 'center',
+                                        'margin': '10px'
+                                        },
+                                # Allow multiple files to be uploaded for future?
+                                multiple = False
                                 ),
-                      dbc.Button("Search", 
-                                color = "primary", 
-                                className = "me-2", 
-                                id = 'submit-search', 
-                                n_clicks = 0, 
-                                style = {"display": "inline-block",'vertical-align': 'middle', 'margin-left': "10px"}
-                                ),          
-                                
-                                
-                                ], className='col-sm-8'),
-              html.Div([dcc.Loading(dcc.Graph(id = 'graph_phases'), type = "circle")]),              
-         html.Div([
-                        html.P("Found phases", style = {'text-align':'center','margin-top':'10px'}),                    
-                        dash_table.DataTable(
-                        id = 'table-dropdown-phases',
-                        columns = [
-                                    
-                                    {'id': 'name', 'name': 'Name'},
-                                    {'id': 'id', 'name': 'ID'},
-                                    {'id': 'hyperlink', 'name': 'Web', 'presentation': 'markdown'},
-                                    {'id': 'R-factor', 'name': 'Similarity'},
-                                    
-                                   ],
-                        editable=False,
-                                            ),                                            
-                 ], style={'margin-left': '5%', 'margin-right': '5%', 'width' : '90%'}, className="table-responsive")
-         
-         
-         
-         
-         
-         ], className='row'),]),
-        dcc.Tab(label='Deconvolution', children=[     html.Div([    
-                      dcc.Tabs([
-        dcc.Tab(label='Moving average smoothing', children=[
-                      html.Div([html.H6('Smooth window:',style={'display':'inline-block','margin-right':5, 'margin-left':10}),
-                      ### Smooth procedures ###
-                      # Moving average
-                      dbc.Input(
-                                id = "smooth",
-                                type = "number",
-                                value = 4,
-                                placeholder="",
-                                style={'display':'inline-block', 'width': 85,'vertical-align': 'middle'} 
-                                ),                  
-                      dbc.Button("Smooth", 
-                                color = "primary", 
-                                className = "me-2", 
-                                id = 'submit-smooth', 
-                                n_clicks = 0, 
-                                style = {"display": "inline-block",'vertical-align': 'middle', 'margin-left': "10px"}
-                                ),                       dbc.Button("Reset", 
-                                 color = "primary", 
-                                 className = "me-2", 
-                                 id = 'submit-reset', n_clicks=0, style={"display": "inline-block",'vertical-align': 'middle'}
-                                ),], className='col-sm-8', style={'margin-top': 10}) ]),
-        dcc.Tab(label='ALS smoothing', children=[             
-                      html.Div([html.H6('Smooth:',style={'display':'inline-block','margin-right':5, 'margin-left':10}),  
-                      # Als smoothing
-                      dbc.Input(
-                                id = "p-als",
-                                type = "number",
-                                value = 0.1,
-                                placeholder = "",
-                                step = 0.001,
-                                style={'display':'inline-block', 'width': 85,'vertical-align': 'middle'} 
-                                ), 
-                      html.H6('p:',style={'display':'inline-block','margin-right':5, 'margin-left':10}),  
-                      dbc.Input(
-                                id = "lam-als",
-                                type = "number",
-                                value = 0.9,
-                                placeholder = "",
-                                style = {'display':'inline-block', 'width': 85,'vertical-align': 'middle'} 
-                                ),
-                      dbc.Button("Smooth ALS", 
-                                 color = "primary", 
-                                 className = "me-2", 
-                                 id = 'submit-smooth-als', 
-                                 n_clicks = 0, 
-                                 style = {"display": "inline-block",'vertical-align': 'middle', 'margin-left': '10px'}
-                                ),                       dbc.Button("Reset", 
-                                 color = "primary", 
-                                 className = "me-2", 
-                                 id = 'submit-reset-2', n_clicks=0, style={"display": "inline-block",'vertical-align': 'middle'}
-                                ),], className='col-sm-8', style={'margin-top': 10}) ])])]),
-                      #Reset smoothing
-
-                     html.Div([
-                      html.Div([html.H6('Look ahead:',style={'display':'inline-block','margin-left': 10, 'margin-right':5, 'margin-top': '10px'}),  
-                      # Input box for peakfinder parameters
-                      dbc.Input(
-                                id = "lookahead",
-                                type = "number",
-                                value = 1,
-                                placeholder = "Only integer",
-                                step = 1,
-                                style = {'display':'inline-block', 'width': 85,'vertical-align': 'middle'} 
-                                ),
-                      html.H6('Delta:',style={'display':'inline-block','margin-right':5, 'margin-left':10}),  
-                      dbc.Input(
-                                id = "delta",
-                                type = "number",
-                                value = 0.5,
-                                placeholder = "",
-                                step = 0.001,
-                                style = {'display':'inline-block', 'width': 85,'vertical-align': 'middle'} 
-                                ),
-                      # Find peaks button
-                      dbc.Button("Find peaks", 
-                                 color="primary", 
-                                 className="me-1", 
-                                 id = 'submit-val', 
-                                 n_clicks = 0, 
-                                 style = {"display": "inline-block",'vertical-align': 'middle', 'margin-left': '10px'})], style={'margin-top': 10}, className="col-sm-6"),
-                                 #],className="row", style={'margin-top': 10}),
-             html.Div([           
-             html.H6('Tolerance:',style={'display':'inline-block','margin': 10,'vertical-align': 'middle'}),
-             # Fittig peaks             
-             dbc.Input(
-                        id = "tolerance",
-                        type = "number",
-                        value = 1e-15,
-                        placeholder = "",
-                        style={'display':'inline-block', 'width': 85, 'margin-left': 5,'vertical-align': 'middle'} 
-                       ), 
-             html.H6('Max_iter:',style={'display':'inline-block','margin': 10,'vertical-align': 'middle'}),
-             # Fittig peaks             
-             dbc.Input(
-                        id = "max_nfev",
-                        type = "number",
-                        value = 1000,
-                        placeholder = "",
-                        style={'display':'inline-block', 'width': 125, 'margin-left': 5,'vertical-align': 'middle'} 
-                       ),                        
-             dbc.Button("Fit", 
-                            color = "success", 
-                            className = "me-2", 
-                            id = 'submit-fit', 
-                            n_clicks = 0, 
-                            style = {"display": "inline-block", 'margin-left': 5, 'margin-right':5, 'vertical-align': 'middle'}
-                       ),
-             dbc.Button("Cut", 
-                            color = "danger", 
-                            className = "me-2", 
-                            id = 'submit-cut', 
-                            n_clicks = 0, 
-                            style = {"display": "inline-block", 'margin-left': 5, 'margin-right':5, 'vertical-align': 'middle'}
-                       )], className="col-sm-6 .col-md-4")], className="row gy-2", style={'margin-top': 10, 'margin-bottom': 10}),                       
-             # Output/input peaks 
-             html.Div([
-             dbc.Input(
-                        id = "peaks",
-                        type = "text",
-                        placeholder = "Found peaks",
-                        style = {'width': '99%', 'textAlign': 'center', 'margin':'auto', 'font-size': 16}, 
-                        className = "form-control form-control-sm"
-                       )], className="row"),
-             # Plot graphs  
-             html.Div([
-             html.Div([dcc.Loading(dcc.Graph(id = 'graph'), type = "circle")], 
-                        style = {'display': 'inline-block'}, className="col-sm-7"
-                        ),
-             html.Div([dcc.Loading(dcc.Graph(id = 'graph_fit'), type = "cube")], 
-                        style = {'display': 'inline-block'}, className="col-sm-5"
-                     )], className="row"),
-             # Download inital curve with substracted baseline, fitted curve, peak curves and the best fit parameters 
+                    dcc.Tabs([
+                                dcc.Tab(label = 'Search phases', 
+                                        children = [
+                                                    html.Div([
+                                                              html.Div([dcc.Dropdown(
+                                                                                    [   'excellent-raman-rruf.h5',
+                                                                                        'LR-broad-raman-rruf.h5', 
+                                                                                        'fair-raman-rruf.h5', 
+                                                                                        'unrated-raman-rruf.h5', 
+                                                                                        'atr-ftir-rruf.h5', 
+                                                                                        'xrd-rruf.h5'
+                                                                                    ],
+                                                                                    ['excellent-raman-rruf.h5'],
+                                                                                    multi=True, 
+                                                                                    id = 'dropdown-database'
+                                                                                    )
+                                                                       ], 
+                                                                        style = {'margin-top': 10, 'margin-bottom':10}, 
+                                                                        className = 'col-sm-8'
+                                                                       ),  
+                                                    html.Div([
+                                                              html.H6('Similarity (0 - 1):',
+                                                              style =  {'display':'inline-block',
+                                                                        'margin-right':5, 
+                                                                         'margin-left':10
+                                                                       }
+                                                                      ),  
+                                                    dbc.Input(
+                                                            id = "cosine",
+                                                            type = "number",
+                                                            value = 0.6,
+                                                            placeholder = "",
+                                                            step = 0.001,
+                                                            style = {'display':'inline-block', 
+                                                                     'width': 85,
+                                                                     'vertical-align': 'middle'
+                                                                     } 
+                                                            ), 
+                                                    html.H6('Number of printed phases:',
+                                                            style = {'display':'inline-block',
+                                                                    'margin-right':5, 
+                                                                    'margin-left':10
+                                                                  }
+                                                           ),  
+                                                    dbc.Input(
+                                                                id = "num_phases",
+                                                                type = "number",
+                                                                value = 10,
+                                                                placeholder = "",
+                                                                style = {   'display':'inline-block', 
+                                                                            'width': 85,
+                                                                             'vertical-align': 'middle'
+                                                                        } 
+                                                              ),
+                                                    dbc.Button("Search", 
+                                                                color = "primary", 
+                                                                className = "me-2", 
+                                                                id = 'submit-search', 
+                                                                n_clicks = 0, 
+                                                                style = {"display": "inline-block",
+                                                                         'vertical-align': 'middle', 
+                                                                         'margin-left': "10px"
+                                                                        }
+                                                              ),          
+                                                            ], className='col-sm-8'
+                                                            ),
+                                                    html.Div([
+                                                              dcc.Loading(
+                                                                            dcc.Graph(id = 'graph_phases'), 
+                                                                            type = "circle")
+                                                             ]),              
+                                                    html.Div([
+                                                                html.P("Found phases", 
+                                                                        style = {'text-align':'center','margin-top':'10px'}
+                                                                      ),                    
+                                                                dash_table.DataTable(
+                                                                                    id = 'table-dropdown-phases',
+                                                                                    columns = [
+                                                                                                {'id': 'name', 'name': 'Name'},
+                                                                                                {'id': 'id', 'name': 'ID'},
+                                                                                                {'id': 'hyperlink', 'name': 'Web', 'presentation': 'markdown'},
+                                                                                                {'id': 'R-factor', 'name': 'Similarity'},
+                                                                                               ],editable = False,
+                                                                                  ),                                              
+                                                              ], style = {'margin-left': '5%', 'margin-right': '5%', 'width' : '90%'}, 
+                                                               className = "table-responsive"
+                                                            )
+                                                            ], className = 'row'),
+                                                    ]
+                                        ),
+                                dcc.Tab(label = 'Deconvolution', 
+                                        children = [
+                                                  html.Div([    
+                                                            dcc.Tabs([
+                                                                        dcc.Tab(label = 'Moving average smoothing', 
+                                                                                children=[
+                                                                                          html.Div([
+                                                                                                    html.H6('Smooth window:',
+                                                                                                            style = {
+                                                                                                                     'display':'inline-block',
+                                                                                                                     'margin-right':5, 
+                                                                                                                     'margin-left':10
+                                                                                                                     }
+                                                                                                            ),
+                                                                                                    ### Smooth procedures ###
+                                                                                                    # Moving average
+                                                                                                    dbc.Input(
+                                                                                                            id = "smooth",
+                                                                                                            type = "number",
+                                                                                                            value = 4,
+                                                                                                            style = {
+                                                                                                                        'display':'inline-block', 
+                                                                                                                        'width': 85,
+                                                                                                                        'vertical-align': 'middle'
+                                                                                                                    } 
+                                                                                                             ),                  
+                                                                                                    dbc.Button("Smooth", 
+                                                                                                            color = "primary", 
+                                                                                                            className = "me-2", 
+                                                                                                            id = 'submit-smooth', 
+                                                                                                            n_clicks = 0, 
+                                                                                                            style = {
+                                                                                                                       "display": "inline-block",
+                                                                                                                       'vertical-align': 'middle', 
+                                                                                                                       'margin-left': "10px"
+                                                                                                                    }
+                                                                                                              ),                       
+                                                                                                    dbc.Button("Reset", 
+                                                                                                            color = "danger", 
+                                                                                                            className = "me-2", 
+                                                                                                            id = 'submit-reset', 
+                                                                                                            n_clicks=0, 
+                                                                                                            style = {
+                                                                                                                    "display": "inline-block",
+                                                                                                                    'vertical-align': 'middle'
+                                                                                                                  }
+                                                                                                               ),
+                                                                                                    ], className = 'col-sm-8', 
+                                                                                                        style = {'margin-top': 10}
+                                                                                                   ) 
+                                                                                           ]
+                                                                                    ),
+                                                                        dcc.Tab(label = 'ALS smoothing', 
+                                                                                children=[             
+                                                                                        html.Div([
+                                                                                                  html.H6('Smooth:',
+                                                                                                          style = {
+                                                                                                                  'display':'inline-block',
+                                                                                                                   'margin-right':5, 
+                                                                                                                   'margin-left':10
+                                                                                                                  }
+                                                                                                         ),  
+                                                                                                  # Als smoothing
+                                                                                                  dbc.Input(
+                                                                                                            id = "p-als",
+                                                                                                            type = "number",
+                                                                                                            value = 0.1,
+                                                                                                            step = 0.001,
+                                                                                                            style = {
+                                                                                                                      'display':'inline-block', 
+                                                                                                                      'width': 85,
+                                                                                                                      'vertical-align': 'middle'
+                                                                                                                    } 
+                                                                                                            ), 
+                                                                                                  html.H6('p:',
+                                                                                                            style = {
+                                                                                                                        'display':'inline-block',
+                                                                                                                        'margin-right':5, 
+                                                                                                                        'margin-left':10
+                                                                                                                    }
+                                                                                                          ),  
+                                                                                                  dbc.Input(
+                                                                                                            id = "lam-als",
+                                                                                                            type = "number",
+                                                                                                            value = 0.9,
+                                                                                                            style = {
+                                                                                                                        'display':'inline-block', 
+                                                                                                                        'width': 85,
+                                                                                                                        'vertical-align': 'middle'
+                                                                                                                    } 
+                                                                                                          ),
+                                                                                                    dbc.Button("Smooth ALS", 
+                                                                                                                color = "primary", 
+                                                                                                                className = "me-2", 
+                                                                                                                id = 'submit-smooth-als', 
+                                                                                                                n_clicks = 0, 
+                                                                                                                style = {
+                                                                                                                          "display": "inline-block",'vertical-align': 'middle', 
+                                                                                                                          'margin-left': '10px'
+                                                                                                                        }
+                                                                                                               ),
+                                                                                                    dbc.Button("Reset", 
+                                                                                                                color = "danger", 
+                                                                                                                className = "me-2", 
+                                                                                                                id = 'submit-reset-2', 
+                                                                                                                n_clicks=0, 
+                                                                                                                style = {
+                                                                                                                            "display": "inline-block",'vertical-align': 'middle'
+                                                                                                                        }
+                                                                                                               ),
+                                                                                                    ], className = 'col-sm-8', 
+                                                                                                       style = {'margin-top': 10}
+                                                                                                ) 
+                                                                                         ]
+                                                                                )
+                                                                    ])
+                                                            ]),
+                                                  html.Div([
+                                                            html.Div([
+                                                                      html.H6('Look ahead:',
+                                                                                style = {
+                                                                                            'display':'inline-block',
+                                                                                            'margin-left': 10, 
+                                                                                            'margin-right':5, 
+                                                                                            'margin-top': '10px'
+                                                                                        }
+                                                                             ),  
+                                                                        # Input box for peakfinder parameters
+                                                                        dbc.Input(
+                                                                                    id = "lookahead",
+                                                                                    type = "number",
+                                                                                    value = 1,
+                                                                                    placeholder = "Only integer",
+                                                                                    step = 1,
+                                                                                    style = {
+                                                                                                'display':'inline-block', 
+                                                                                                'width': 85,
+                                                                                                 'vertical-align': 'middle'
+                                                                                            } 
+                                                                                ),
+                                                                        html.H6('Delta:',
+                                                                                style = {
+                                                                                            'display':'inline-block',
+                                                                                            'margin-right':5, 
+                                                                                            'margin-left':10
+                                                                                        }
+                                                                                ),  
+                                                                        dbc.Input(
+                                                                                    id = "delta",
+                                                                                    type = "number",
+                                                                                    value = 0.5,
+                                                                                    step = 0.001,
+                                                                                    style = {
+                                                                                                'display':'inline-block', 
+                                                                                                'width': 85,
+                                                                                                'vertical-align': 'middle'
+                                                                                            } 
+                                                                                ),
+                                                                        # Find peaks button
+                                                                        dbc.Button("Find peaks", 
+                                                                                    color="primary", 
+                                                                                    className="me-1", 
+                                                                                    id = 'submit-val', 
+                                                                                    n_clicks = 0, 
+                                                                                    style = {
+                                                                                                "display": "inline-block",
+                                                                                                'vertical-align': 'middle', 
+                                                                                                'margin-left': '10px'
+                                                                                            }
+                                                                                    )
+                                                                    ], style = {'margin-top': 10}, 
+                                                                        className = "col-sm-5"
+                                                                    ),
+                                                            html.Div([           
+                                                                      html.H6('Tolerance:',
+                                                                                style = {
+                                                                                            'display':'inline-block',
+                                                                                            'margin': 10,
+                                                                                            'vertical-align': 'middle'
+                                                                                        }
+                                                                             ),
+                                                                       # Fittig peaks             
+                                                                      dbc.Input(
+                                                                                id = "tolerance",
+                                                                                type = "number",
+                                                                                value = 1e-15,
+                                                                                style = {
+                                                                                            'display':'inline-block', 
+                                                                                            'width': 85, 'margin-left': 5,
+                                                                                            'vertical-align': 'middle'
+                                                                                        } 
+                                                                                ), 
+                                                                        html.H6('Max_iter:',
+                                                                                 style = {
+                                                                                            'display':'inline-block',
+                                                                                            'margin': 10,
+                                                                                            'vertical-align': 'middle'
+                                                                                          }
+                                                                                ),
+                                                                        # Fittig peaks             
+                                                                        dbc.Input(
+                                                                                  id = "max_nfev",
+                                                                                  type = "number",
+                                                                                  value = 1000,
+                                                                                  style = {
+                                                                                            'display':'inline-block', 
+                                                                                            'width': 125, 
+                                                                                            'margin-left': 5,
+                                                                                            'vertical-align': 'middle'
+                                                                                          } 
+                                                                                 ),                        
+                                                                        dbc.Button("Fit", 
+                                                                                    color = "success", 
+                                                                                    className = "me-2", 
+                                                                                    id = 'submit-fit', 
+                                                                                    n_clicks = 0, 
+                                                                                    style = {
+                                                                                                "display": "inline-block", 
+                                                                                                'margin-left': 5, 
+                                                                                                'margin-right':5, 
+                                                                                                'vertical-align': 'middle'
+                                                                                            }
+                                                                                   ),
+                                                                        dbc.Button("Cut", 
+                                                                                   color = "warning", 
+                                                                                   className = "me-2", 
+                                                                                    id = 'submit-cut', 
+                                                                                    n_clicks = 0, 
+                                                                                    style = {
+                                                                                                "display": "inline-block", 
+                                                                                                'margin-left': 5, 
+                                                                                                'margin-right':5, 
+                                                                                                'vertical-align': 'middle'
+                                                                                            }
+                                                                                    ),
+                                                                        dbc.Button("Remove baseline", 
+                                                                                    color = "danger", 
+                                                                                    className = "me-2", 
+                                                                                    id = 'submit-remove', 
+                                                                                    n_clicks = 0, 
+                                                                                    style = {
+                                                                                                "display": "inline-block",
+                                                                                                'vertical-align': 'middle', 
+                                                                                                'margin-left': "10px"
+                                                                                            }
+                                                                                    ),                        
+                                                                    ], className = "col-sm-7 .col-md-4"
+                                                                    ),
+                                                        ], className = "row gy-2", 
+                                                          style = {
+                                                                    'margin-top': 10, 
+                                                                    'margin-bottom': 10
+                                                                  }
+                                                        ),                       
+                                                        # Output/input peaks 
+                                                html.Div([
+                                                            dbc.Input(
+                                                                       id = "peaks",
+                                                                       type = "text",
+                                                                       placeholder = "Found peaks",
+                                                                       style = {
+                                                                                'width': '99%', 
+                                                                                'textAlign': 'center', 
+                                                                                'margin':'auto', 
+                                                                                'font-size': 16
+                                                                                }, 
+                                                                                className = "form-control form-control-sm"
+                                                                    )
+                                                        ], className="row"
+                                                        ),
+                                                # Plot graphs  
+                                                html.Div([
+                                                            html.Div([
+                                                                     dcc.Loading(dcc.Graph(id = 'graph'), 
+                                                                                 type = "circle"
+                                                                                 )
+                                                                    ], 
+                                                                    style = {
+                                                                                'display': 'inline-block'
+                                                                            }, 
+                                                                    className="col-sm-6"
+                                                                    ),
+                                                            html.Div([
+                                                                        dcc.Loading(dcc.Graph(id = 'graph_fit'), 
+                                                                                    type = "cube"
+                                                                                    )
+                                                                     ], 
+                                                                      style = {
+                                                                                'display': 'inline-block'
+                                                                              }, 
+                                                                      className="col-sm-6"
+                                                                    )
+                                                         ], 
+                                                         className="row"
+                                                        ),
+            # Download inital curve with substracted baseline, fitted curve, peak curves and the best fit parameters 
              html.A(
                     'Download Subsracted Baseline Data',
                     id = 'download-link-substr',
@@ -507,10 +697,65 @@ def parse_contents(contents,filename):
     else:
                 raise ValueError(f'Format of file is not supported.')
     return (c_, c_)
+@app.callback(
+                [Output('b', 'data', allow_duplicate = True)],
+                Output('table-dropdown-als', 'data'),
+                Input('submit-remove', 'n_clicks'),
+                [State('b', 'data')],
+                prevent_initial_call = True,
+              )
+              
+def remove_bgrnd(n_clicks, res_):
+    centers_=res_
+    ahead=0.5
+    while not centers_['peaks']:
+        ahead=ahead-0.1
+        centers_=fnd.peakdetect(res_['spectrum'][0],res_['spectrum'][1],1,ahead)
+        if ahead<0.1: return res_, [{'l_p_min': 0.0001, 'p_p': 0.01, 'l_p_max': 0.07, 'l_lam_min': 1e6, 'p_lam': 1e7, 'l_lam_max': 1e9}]
+    
+    c_={}
+    c_=res_
+    table_par=[]
+    for i in centers_['peaks']:
+        table_par.append({'p_center': i, 'p_amplitude': 1, 
+                        'p_width': 4,'p_method': 'PseudoVoigt', 'l_center_min': 5, 
+                        'l_center_max': 5, 'l_amplitude_min': 0, 'l_amplitude_max': 100, 
+                        'l_width_min': 0.2, 'l_width_max':5
+                        
+                        })
+    table_als=[{'l_p_min': 0.0001, 'p_p': 0.01, 'l_p_max': 0.07, 'l_lam_min': 1e6, 'p_lam': 1e7, 'l_lam_max': 1e9}]
+    tolerance=1e12
+    max_nfev=500
+    data_ = fnd.fitcurve(
+                            res_['spectrum'][0],
+                            res_['spectrum'][1],
+                            str(centers_['peaks']), 
+                            parameters = table_par, 
+                            parameter_als = table_als, 
+                            tolerance = tolerance,
+                            max_nfev=max_nfev
+                        )
 
-# Plot the uploaded spectrum callback       
+    for model_name, model_value in data_['components'].items():
+        if model_name == 'bg_': c_['spectrum'][1]=c_['spectrum'][1] - model_value 
+  
+    # fig = go.Figure()
+    # fig = fig.add_trace(go.Scatter(
+                                    # x = c_['spectrum'][0], 
+                                    # y = c_['spectrum'][1],
+                                    # mode = 'lines',
+                                    # name = 'Substracted baseline spectrum'
+                                    # ),
+                       # )
+    p_=data_['params']['p'].value
+    l_=data_['params']['lam'].value
+    als_settings = [{'l_p_min': p_/100.0, 'p_p': p_, 'l_p_max': p_*10, 'l_lam_min': l_/100.0, 'p_lam': l_, 'l_lam_max': l_*100}]
+    return c_, als_settings  
+# Plot the uploaded spectrum callback
+       
 @app.callback(
                 
+                [Output('b', 'data',allow_duplicate = True)],
                 Output('table-dropdown', 'data'),
                 Output('graph_phases', 'figure'),
                 Output('graph', 'figure'),
@@ -551,6 +796,7 @@ def update_line_chart(contents):
                                     )
                         )
                     
+                    
     for i in data_['peaks']:
         fig.add_vline(x = i, line_width = 3, line_dash="dash", line_color = "green")
     params = []
@@ -563,7 +809,7 @@ def update_line_chart(contents):
                         }
                       )
     
-    return params, fig, fig, data_['look'], data_['delta'], ','.join([str(round(i)) for i in data_['peaks']])
+    return data_,params, fig, fig, data_['look'], data_['delta'], ','.join([str(round(i)) for i in data_['peaks']])
 
 # Find peaks again with new lookahead and lambda parameters    
 @app.callback(
@@ -649,33 +895,33 @@ def reset_data(n_clicks, res_):
     return [res_]
     
 # Update figure after re-peakdetect        
-@app.callback(
-                Output('graph', 'figure',allow_duplicate = True),
-                Output('lookahead', 'value',allow_duplicate = True),
-                Output('delta', 'value',allow_duplicate = True),
-                Output('peaks', 'value',allow_duplicate = True),
-                [Input('b', 'data')],
-                State('upload-data', 'filename'),
-                prevent_initial_call = True,
-              )
+# @app.callback(
+                # Output('graph', 'figure',allow_duplicate = True),
+                # Output('lookahead', 'value',allow_duplicate = True),
+                # Output('delta', 'value',allow_duplicate = True),
+                # Output('peaks', 'value',allow_duplicate = True),
+                # [Input('b', 'data')],
+                # State('upload-data', 'filename'),
+                # prevent_initial_call = True,
+              # )
         
-def update_line_chart(data_, filename):
+# def update_line_chart(data_, filename):
 
-    fig = go.Figure()
-    fig = fig.add_trace(go.Scatter(x = data_['spectrum'][0], 
-                                   y = data_['spectrum'][1],
-                                   mode = 'lines',
-                                   name = 'Initial spectrum'
-                                   ), 
-                        )
-    for i in data_['peaks']:
-        fig.add_vline(x = i, line_width = 3, line_dash = "dash", line_color = "green")
-    fig.update_layout(
-                        title = "Spectrum from file: "+filename,
-                        xaxis_title = "Wavenumber, cm-1",
-                        yaxis_title = "Intensity"
-                     )   
-    return fig, data_['look'], data_['delta'], ','.join([str(round(i)) for i in data_['peaks']])
+    # fig = go.Figure()
+    # fig = fig.add_trace(go.Scatter(x = data_['spectrum'][0], 
+                                   # y = data_['spectrum'][1],
+                                   # mode = 'lines',
+                                   # name = 'Initial spectrum'
+                                   # ), 
+                        # )
+    # for i in data_['peaks']:
+        # fig.add_vline(x = i, line_width = 3, line_dash = "dash", line_color = "green")
+    # fig.update_layout(
+                        # title = "Spectrum from file: "+filename,
+                        # xaxis_title = "Wavenumber, cm-1",
+                        # yaxis_title = "Intensity"
+                     # )   
+    # return fig, data_['look'], data_['delta'], ','.join([str(round(i)) for i in data_['peaks']])
 
 @app.callback(
                 [Output('b', 'data',allow_duplicate = True)],
@@ -740,7 +986,8 @@ def plot_phases(n_clicks, db_string, data_,nphases, cos_):
                                         )
                 
                 if founded_names is not None: phase_table.extend(founded_names)
-    return fig, phase_table    
+    return fig, phase_table
+  
 # Fit procedure callback
 @app.callback(
                 Output('graph_fit', 'figure'),
@@ -760,17 +1007,18 @@ def plot_phases(n_clicks, db_string, data_,nphases, cos_):
                 prevent_initial_call = True,
             )
     
-def update_fitline_chart(n_clicks, peaks, data_, filename, tolerance,max_nfev, table_par, table_als):
+def update_fitline_chart(n_clicks, peaks, data0_, filename, tolerance,max_nfev, table_par, table_als):
 
     data_ = fnd.fitcurve(
-                            data_['spectrum'][0],
-                            data_['spectrum'][1],
+                            data0_['spectrum'][0],
+                            data0_['spectrum'][1],
                             peaks, 
                             parameters = table_par, 
                             parameter_als = table_als, 
                             tolerance = tolerance,
                             max_nfev=max_nfev
                         )
+                        
     fig = go.Figure()
     df_peaks = {}
     df_peaks['x'] = data_['output'][0]
