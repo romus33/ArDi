@@ -4,8 +4,8 @@ The module finder for web-app ArDi (ArDI (Advanced spectRa Deconvolution Instrum
 
 2) dash, plotly, dash_bootstrap, pandas, urllib, base64, io, os, sys, copy
 
-
-Release: 0.2.0
+Release: 0.4.0
+Copyright © 2023 Roman Shendrik. All rights reserved.
 """
 __author__ = "Roman Shendrik"
 __copyright__ = "Copyright (C) 2023R"

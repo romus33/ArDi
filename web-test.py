@@ -1,11 +1,13 @@
 """
+
 The web-app ArDI (Advanced spectRa Deconvolution Instrument) for fitting of different types of curves. The application uses the follow packages:
 1) micromap (https://github.com/romus33/micromap): time, ctypes, multiprocessing, lmfit, numpy, scipy, termcolor, os, platform
 
 2) dash, plotly, dash_bootstrap, pandas, urllib, base64, io, os, sys, copy
 
 
-Release: 0.2.0
+Release: 0.4.0
+Copyright © 2023 Roman Shendrik. All rights reserved.
 """
 __author__ = "Roman Shendrik"
 __copyright__ = "Copyright (C) 2023R"

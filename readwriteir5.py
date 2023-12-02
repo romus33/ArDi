@@ -1,3 +1,9 @@
+"""
+The part of of micromap package (https://github.com/romus33/micromap) for h5 database.
+Release: 0.4.0
+Copyright © 2023 Roman Shendrik. All rights reserved.
+"""
+
 import struct
 import copy
 from ctypes import *
