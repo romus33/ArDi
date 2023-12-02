@@ -4,9 +4,9 @@ The part of micromap package (https://github.com/romus33/micromap) for curve fit
 Release: 1.0.0
 """
 __author__ = "Roman Shendrik"
-__copyright__ = "Copyright (C) 2023R"
+__copyright__ = "Copyright © 2023R"
 __license__ = "GNU GPL 3.0"
-__version__ = "1.0.0"
+__version__ = "0.4.0"
 
 import time as tm
 from ctypes import *

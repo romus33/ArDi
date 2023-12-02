@@ -5,14 +5,11 @@ The web-app ArDI (Advanced spectRa Deconvolution Instrument) for fitting of diff
 
 2) dash, plotly, dash_bootstrap, pandas, urllib, base64, io, os, sys, copy
 
-
-Release: 0.4.0
-Copyright © 2023 Roman Shendrik. All rights reserved.
 """
 __author__ = "Roman Shendrik"
-__copyright__ = "Copyright (C) 2023R"
+__copyright__ = "Copyright © 2023R"
 __license__ = "GNU GPL 3.0"
-__version__ = "0.2.0"
+__version__ = "0.4.0"
 
 from dash import Dash, dcc, html, dash_table, Input, Output, State, callback
 from dash.dash_table.Format import Format, Scheme, Trim

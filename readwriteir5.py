@@ -3,6 +3,10 @@ The part of of micromap package (https://github.com/romus33/micromap) for h5 dat
 Release: 0.4.0
 Copyright © 2023 Roman Shendrik. All rights reserved.
 """
+__author__ = "Roman Shendrik"
+__copyright__ = "Copyright © 2023R"
+__license__ = "GNU GPL 3.0"
+__version__ = "0.4.0"
 
 import struct
 import copy
