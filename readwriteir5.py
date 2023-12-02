@@ -454,20 +454,33 @@ class ReadWrite5(object):
             r = np.dot(dbY, y) / (np.linalg.norm(dbY) * np.linalg.norm(y))
             tmp_arr[cnt] = r
         return filled(tmp_arr, r_ref)
-    def find_phase_in(self, x, y, dbname=None, r_ref=0.8):
+    def find_phase_in(self, x, y, dbname=None, r_ref=0.8, wavelength=None):
         if dbname is not None:
             y=np.array(y) 
             x=np.array(x)
             f = h5py.File(dbname, 'r')
-            count_i = 0
-            group='uncorrected'
-            gr = f.get(group)
-            ls = list(gr.keys())
+            # count_i = 0
+            #group='uncorrected'
+            #gr = f.get(group)
+            ls = list(f.keys())
             length=len(ls)
-            self.__pBar__.printProgressBar(0, length, prefix='Progress:', suffix='', length=50)
+           ## print(length)
+            # self.__pBar__.printProgressBar(0, length, prefix='Progress:', suffix='', length=50)
             found_phases_=[]
             for key in ls:
-                a = gr.get(key)
+                
+                a = f.get(key)
+                b = a.attrs["name"]
+                wl=None
+                if "wavelength" in a.attrs:
+                    wl = a.attrs["wavelength"]
+                    #print(wl, wavelength)
+                    if wavelength is not None:
+                    
+                        if wavelength!=wl:
+                            # count_i = count_i+1
+                            # self.__pBar__.printProgressBar(count_i, length, prefix='Progress:', suffix='', length=50)
+                            continue
                 dbX = np.array(a[0])
                 dbY = np.array(a[1])
                 dbY_s = dbY - np.array(a[2])
@@ -482,9 +495,9 @@ class ReadWrite5(object):
                 else:
                     if (r_>=r_ref):
                         #print('??????')
-                        found_phases_.append({"key": key, "r": r_, "name":  a.attrs["name"], "x": x, "y": dbY})
-                count_i = count_i+1
-                self.__pBar__.printProgressBar(count_i, length, prefix='Progress:', suffix='', length=50)
+                        found_phases_.append({"key": key, "r": r_, "name":  a.attrs["name"], "x": x, "y": dbY, "wavelength": wl})
+                # count_i = count_i+1
+                # self.__pBar__.printProgressBar(count_i, length, prefix='Progress:', suffix='', length=50)
 
             return found_phases_
         else:

@@ -191,10 +191,10 @@ def fitcurve(xx,yy,peaks_str,parameters = None, parameter_als=None, tolerance = 
     # else:
             # raise ValueError(f'Empty db') 
             
-def find_phase(xx, yy, dbname = None, print_number = 10, sim = 0.8):
+def find_phase(xx, yy, dbname = None, print_number = 10, sim = 0.8, wavelength=None):
     if dbname is not None:
             dbRead = rm.ReadWrite5()
-            spectra = dbRead.find_phase_in(xx, yy, dbname=dbname, r_ref=sim)
+            spectra = dbRead.find_phase_in(xx, yy, dbname=dbname, r_ref=sim, wavelength=wavelength)
             founded_names=[]
             founded_phases=[]
             cnt_=0
@@ -213,9 +213,18 @@ def find_phase(xx, yy, dbname = None, print_number = 10, sim = 0.8):
                     str_ = val["name"]
                     b = str_.split('_')
                     # print(b)
-                    hyp_='[RRUF]('+'https://rruff.info/'+str(b[1])+')'
-                    founded_names.append({'R-factor': format(val["r"], '.4f'), 'name': b[0], 'id': b[1], 'hyperlink': hyp_})
-                    str_=b[0]+'_'+b[1]
+                    name_= val["name"]
+                    id_=""
+                    if len(b)>1:
+                        hyp_='[RRUF]('+'https://rruff.info/'+str(b[1])+')'
+                        str_=b[0]+'_'+b[1]
+                        id_ = b[1]
+                        name_=b[0]
+                    else:
+                        hyp_=""
+                        str_=val["name"]
+                        
+                    founded_names.append({'R-factor': format(val["r"], '.4f'), 'name': name_, 'id': id_, 'hyperlink': hyp_})
                     founded_phases.append({'x': val["x"], 'y': val["y"], 'label': str_})
                 else:
                     break

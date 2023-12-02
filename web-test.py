@@ -82,7 +82,8 @@ app.layout = html.Div([
                                                                                         'fair-raman-rruf.h5', 
                                                                                         'unrated-raman-rruf.h5', 
                                                                                         'atr-ftir-rruf.h5', 
-                                                                                        'xrd-rruf.h5'
+                                                                                        'xrd-rruf.h5',
+                                                                                        'reflection-ftir.h5'
                                                                                     ],
                                                                                     ['excellent-raman-rruf.h5'],
                                                                                     multi=True, 
@@ -126,6 +127,20 @@ app.layout = html.Div([
                                                                              'vertical-align': 'middle'
                                                                         } 
                                                               ),
+                                                    html.H6('Wavelength:',
+                                                            style = {'display':'inline-block',
+                                                                    'margin-right':5, 
+                                                                    'margin-left':10
+                                                                  }
+                                                           ),  
+                                                    dbc.Input(
+                                                                id = "wavelength",
+                                                                type = "number",
+                                                                style = {   'display':'inline-block', 
+                                                                            'width': 85,
+                                                                             'vertical-align': 'middle'
+                                                                        } 
+                                                              ),                                                              
                                                     dbc.Button("Search", 
                                                                 color = "primary", 
                                                                 className = "me-2", 
@@ -333,7 +348,7 @@ app.layout = html.Div([
                                                                                             }
                                                                                     )
                                                                     ], style = {'margin-top': 10}, 
-                                                                        className = "col-sm-5"
+                                                                        className = "col-sm-5 .col-md-4"
                                                                     ),
                                                             html.Div([           
                                                                       html.H6('Tolerance:',
@@ -953,10 +968,11 @@ def arrange_figure(n_clicks, selected, data_):
                 [State('b', 'data')],
                 State('num_phases', 'value'),
                 State('cosine', 'value'),
+                State('wavelength', 'value'),
                 prevent_initial_call = True,
             )
 @cache.memoize(timeout=TIMEOUT)            
-def plot_phases(n_clicks, db_string, data_,nphases, cos_):
+def plot_phases(n_clicks, db_string, data_,nphases, cos_, wl_):
     path='.//databases//'
     fig = go.Figure()                    
     fig = fig.add_trace(go.Scatter(
@@ -969,12 +985,13 @@ def plot_phases(n_clicks, db_string, data_,nphases, cos_):
     phase_table=[]                    
     for b_ in db_string:
                 fname_=path+b_
+                if wl_ is not None: wl_=str(wl_)
                 founded_names, founded_phases = fnd.find_phase(
                                         data_['spectrum'][0],
                                         data_['spectrum'][1],
                                         dbname=fname_, 
                                         print_number = nphases, 
-                                        sim = cos_, 
+                                        sim = cos_, wavelength=wl_
                                         )
                 # Plot the initial spectrum
                 for item in founded_phases:
