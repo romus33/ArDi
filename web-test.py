@@ -82,7 +82,9 @@ app.layout = html.Div([
                                                                                         'unrated-raman-rruf.h5', 
                                                                                         'atr-ftir-rruf.h5', 
                                                                                         'xrd-rruf.h5',
-                                                                                        'reflection-ftir.h5'
+                                                                                        'reflection-ftir.h5',
+                                                                                        'raman-fmm.h5',
+                                                                                        'raman-model-fmm.h5'
                                                                                     ],
                                                                                     ['excellent-raman-rruf.h5'],
                                                                                     multi=True, 
@@ -162,12 +164,13 @@ app.layout = html.Div([
                                                                         style = {'text-align':'center','margin-top':'10px'}
                                                                       ),                    
                                                                 dash_table.DataTable(
-                                                                                    id = 'table-dropdown-phases',
+                                                                                    id = 'table-dropdown-phases',  filter_action='native',
                                                                                     columns = [
                                                                                                 {'id': 'name', 'name': 'Name'},
                                                                                                 {'id': 'id', 'name': 'ID'},
                                                                                                 {'id': 'hyperlink', 'name': 'Web', 'presentation': 'markdown'},
                                                                                                 {'id': 'R-factor', 'name': 'Similarity'},
+                                                                                                {'id': 'wavelength', 'name': 'Wavelenght', 'hideable': True},
                                                                                                ],editable = False,
                                                                                   ),                                              
                                                               ], style = {'margin-left': '5%', 'margin-right': '5%', 'width' : '90%'}, 
@@ -471,7 +474,18 @@ app.layout = html.Div([
                                                          ], 
                                                          className="row"
                                                         ),
-            # Download inital curve with substracted baseline, fitted curve, peak curves and the best fit parameters 
+            # Download inital curve with substracted baseline, fitted curve, peak curves and the best fit parameters
+             html.A(
+                    'Download spectrum',
+                    id = 'download-link-raw',
+                    download = "raw.csv",
+                    href = "",
+                    target = "_blank",
+                    style = {'display': 'inline-block','font-family': 'Times New Roman, Times, serif', 
+                            'font-weight': 'bold', 'margin-left': '10px',
+                            'vertical-align': 'middle'
+                            }
+                    ),            
              html.A(
                     'Download Subsracted Baseline Data',
                     id = 'download-link-substr',
@@ -535,17 +549,17 @@ app.layout = html.Div([
                         id = 'table-dropdown',
                         columns = [
                                     {'id': 'p_center', 'name': 'Center (C)'},
-                                    {'id': 'p_amplitude', 'name': 'Amplitude (A)'},
-                                    {'id': 'p_width', 'name': 'Sigma (S)'},
-                                    {'id': 'p_method', 'name': 'Method', 'presentation': 'dropdown'},
-                                    {'id': 'l_center_min', 'name': 'C_min value'},
-                                    {'id': 'l_center_max', 'name': 'C_max value'},
-                                    {'id': 'l_amplitude_min', 'name': 'A_min scaler'},
-                                    {'id': 'l_amplitude_max', 'name': 'A_max scaler'},
-                                    {'id': 'l_width_min', 'name': 'S_min scaler'},
-                                    {'id': 'l_width_max', 'name': 'S_max scaler'},
+                                    {'id': 'p_amplitude', 'name': 'Amplitude (A)', "hideable": True},
+                                    {'id': 'p_width', 'name': 'Sigma (S)', "hideable": True},
+                                    {'id': 'p_method', 'name': 'Method', 'presentation': 'dropdown', "hideable": True},
+                                    {'id': 'l_center_min', 'name': 'C_min value', "hideable": True},
+                                    {'id': 'l_center_max', 'name': 'C_max value', "hideable": True},
+                                    {'id': 'l_amplitude_min', 'name': 'A_min scaler', "hideable": True},
+                                    {'id': 'l_amplitude_max', 'name': 'A_max scaler', "hideable": True},
+                                    {'id': 'l_width_min', 'name': 'S_min scaler', "hideable": True},
+                                    {'id': 'l_width_max', 'name': 'S_max scaler', "hideable": True},
                                    ],
-                        editable = True,
+                        editable = True, export_format='csv',
                         dropdown = {
                                     'p_method': {
                                     'options': [{'label': i, 'value': i} for i in ['PseudoVoigt', 'Gaussian', 'Voigt', 
@@ -556,7 +570,9 @@ app.layout = html.Div([
                                                ]
                                                 }
                                   }
-                                            )], style={'margin-left': '5%', 'margin-right': '5%', 'width' : '90%'}, className="table-responsive"),
+                                            ), html.Button('Add Row', id='editing-rows-button', n_clicks=0)], style={'margin-left': '5%', 'margin-right': '5%', 'width' : '90%'}, className="table-responsive"),
+                        
+                        
                         html.Div([
                         html.P("ALS baseline parameters", style = {'text-align':'center','margin-top':'10px'}),                    
                         dash_table.DataTable(
@@ -635,9 +651,6 @@ Code of callback for web-interface
                 prevent_initial_call = True
             )
 
-
-
-
 @cache.memoize(timeout=TIMEOUT)    
 def parse_contents(contents,filename):
     """
@@ -710,7 +723,8 @@ def parse_contents(contents,filename):
                 c_ = fnd.readfile(res_,skiprows=9)                
     else:
                 raise ValueError(f'Format of file is not supported.')
-    return (c_, c_)
+    return  (c_, c_)
+    
 @app.callback(
                 [Output('b', 'data', allow_duplicate = True)],
                 Output('table-dropdown-als', 'data'),
@@ -776,6 +790,7 @@ def remove_bgrnd(n_clicks, res_):
                 Output('lookahead', 'value'),
                 Output('delta', 'value'),
                 Output('peaks', 'value'),
+                Output('download-link-raw', 'href'),
                 [Input('b', 'data')],
                 prevent_initial_call = True,
             )
@@ -822,8 +837,11 @@ def update_line_chart(contents):
                         'l_width_min': 0.2, 'l_width_max':20
                         }
                       )
-    
-    return data_,params, fig, fig, data_['look'], data_['delta'], ','.join([str(round(i)) for i in data_['peaks']])
+    datum = {'x': data_['spectrum'][0], 'y': data_['spectrum'][1]}
+    df = pd.DataFrame(data = datum)
+    csv_string_f_nb = df.to_csv(index = False, encoding = 'utf-8')
+    csv_string_f_nb = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string_f_nb)
+    return data_,params, fig, fig, data_['look'], data_['delta'], ','.join([str(round(i)) for i in data_['peaks']]), csv_string_f_nb
 
 # Find peaks again with new lookahead and lambda parameters    
 @app.callback(
@@ -1003,6 +1021,18 @@ def plot_phases(n_clicks, db_string, data_,nphases, cos_, wl_):
                 
                 if founded_names is not None: phase_table.extend(founded_names)
     return fig, phase_table
+@app.callback(
+    Output('table-dropdown', 'data', allow_duplicate = True),
+    Input('editing-rows-button', 'n_clicks'),
+    State('table-dropdown', 'data'),
+    State('table-dropdown', 'columns'),
+    prevent_initial_call = True,
+    
+    )
+def add_row(n_clicks, rows, columns):
+    if n_clicks > 0:
+        rows.append({c['id']: '' for c in columns})
+    return rows     
   
 # Fit procedure callback
 @app.callback(
@@ -1012,6 +1042,8 @@ def plot_phases(n_clicks, db_string, data_,nphases, cos_, wl_):
                 Output('download-link-peaks', 'href'),
                 Output('download-link-params', 'href'),
                 Output('download-link-fit-nobline', 'href'),
+                #Output('table-dropdown','data', allow_duplicate = True),
+                #Output('table-dropdown-als', 'data', allow_duplicate = True),
                 Input('submit-fit', 'n_clicks'),
                 State('peaks', 'value'),
                 [State('b', 'data')],
@@ -1022,6 +1054,7 @@ def plot_phases(n_clicks, db_string, data_,nphases, cos_, wl_):
                 State('table-dropdown-als', 'data'),
                 prevent_initial_call = True,
             )
+ 
     
 def update_fitline_chart(n_clicks, peaks, data0_, filename, tolerance,max_nfev, table_par, table_als):
 
@@ -1102,8 +1135,9 @@ def update_fitline_chart(n_clicks, peaks, data0_, filename, tolerance,max_nfev, 
     csv_string_p = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string_p)
     df_ = pd.DataFrame(data = data_['params'])
     csv_string_pa = df_.to_csv(index = False, encoding = 'utf-8')
-    csv_string_pa = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string_pa)    
-    fig.update_layout(title = "Deconvoluted spectrum of "+filename+". R-Square: {0:.4f}".format(data_["params"]["R-Square"]),
+    csv_string_pa = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string_pa)
+    #fit_param = {'Center':np.array(C_), 'Amplitude': np.array(A_),'Sigma': np.array(S_), 'FWHM': np.array(F_), 'Height': np.array(H_),'Method': params['method'], 'R-Square': Rsq, 'p': result['p'], 'lam': result['lam']}
+    fig.update_layout(title = filename[:16]+". R-Square: {0:.4f}".format(data_["params"]["R-Square"]),
     xaxis_title = "Wavenumber, cm-1",
     yaxis_title = "Intensity")   
     return fig, csv_string_s, csv_string_f, csv_string_p, csv_string_pa, csv_string_f_nb 

@@ -222,7 +222,7 @@ def find_phase(xx, yy, dbname = None, print_number = 10, sim = 0.8, wavelength=N
                         hyp_=""
                         str_=val["name"]
                         
-                    founded_names.append({'R-factor': format(val["r"], '.4f'), 'name': name_, 'id': id_, 'hyperlink': hyp_})
+                    founded_names.append({'R-factor': format(val["r"], '.4f'), 'name': name_, 'id': id_, 'hyperlink': hyp_, 'wavelength': val['wavelength']})
                     founded_phases.append({'x': val["x"], 'y': val["y"], 'label': str_})
                 else:
                     break

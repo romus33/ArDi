@@ -493,15 +493,17 @@ class ReadWrite5(object):
                             continue
                 dbX = np.array(a[0])
                 dbY = np.array(a[1])
-                dbY_s = dbY - np.array(a[2])
-                dbY_s = np.interp(x, dbX, dbY_s)
-                r_ = self.pairwise_correlation(y, dbY_s)[0]
+                r_=0
+                if len(a)==3:
+                    dbY_s = dbY - np.array(a[2])
+                    dbY_s = np.interp(x, dbX, dbY_s)
+                    r_ = self.pairwise_correlation(y, dbY_s)[0]
                 dbY = np.interp(x, dbX, dbY)
                 r = self.pairwise_correlation(y, dbY)[0]
                 if r>r_:
                     if (r>=r_ref):
                         #print('!!!!!')
-                        found_phases_.append({"key": key, "r": r, "name":  a.attrs["name"], "x": x, "y": dbY})
+                        found_phases_.append({"key": key, "r": r, "name":  a.attrs["name"], "x": x, "y": dbY, "wavelength": wl})
                 else:
                     if (r_>=r_ref):
                         #print('??????')
